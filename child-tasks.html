@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Görevlerim | TaskFamily</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 50px; }
+        .task-card { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; }
+        .done-btn { background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>📋 Merhaba! İşte Görevlerin:</h1>
+    <div id="tasks-container">
+        <div class="task-card">
+            <span>Odani Topla</span>
+            <button class="done-btn">Tamamladım!</button>
+        </div>
+    </div>
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const childEmail = urlParams.get('email');
+
+    async function loadMyTasks() {
+        if (!childEmail) return;
+
+        // Sunucudan sadece bu çocuğa ait görevleri iste
+        const res = await fetch(`/get-child-tasks?email=${childEmail}`);
+        const tasks = await res.json();
+
+        const container = document.getElementById('tasks-container');
+        container.innerHTML = "";
+
+        if(tasks.length === 0) {
+            container.innerHTML = "<p>Henüz atanmış bir görevin yok. Keyfine bak! 😊</p>";
+        }
+
+        tasks.forEach(task => {
+            container.innerHTML += `
+                <div class="task-card">
+                    <span>${task.task_title}</span>
+                    <button class="done-btn" onclick="markAsDone(${task.id})">
+                        ${task.status === 'completed' ? '✅ Tamamlandı' : 'Tamamladım!'}
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    async function markAsDone(taskId) {
+        const res = await fetch('/complete-task', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId })
+        });
+        if(res.ok) loadMyTasks(); // Listeyi yenile
+    }
+
+    window.onload = loadMyTasks;
+</script>
+</body>
+</html>
