@@ -188,6 +188,9 @@ app.post('/complete-task', async (req, res) => {
 db.query('SELECT current_database()').then(res => console.log("Kodun bağlandığı DB:", res.rows[0].current_database));
 
 const PORT = process.env.PORT || 3000;
+db.query("DELETE FROM users WHERE role = 'child'")
+  .then(() => console.log("✅ Tüm çocuk kayıtları temizlendi."))
+  .catch(err => console.error("❌ Silme hatası:", err));
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Sunucu yayında!`);
     console.log(`🏠 Bilgisayardan: http://localhost:${PORT}`);
