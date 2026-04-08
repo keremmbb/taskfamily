@@ -56,24 +56,37 @@ app.post('/add-task', async (req, res) => {
 });
 app.post('/invite-child', async (req, res) => {
     const { childEmail, parentId } = req.body;
-    // Çocuğa özel bir geçici şifre veya link oluşturuyoruz
-    const tempPass = "123456"; // Gerçek projede bunu rastgele yapmalısın
+    const tempPass = "123456"; 
     
     try {
-        // Çocuğu sisteme 'child' rolüyle ve parent_id ile kaydet
+        // 1. Çocuğu kaydet veya varsa parent_id'sini güncelle
         await db.query(
-            "INSERT INTO users (email, password, role, is_verified, parent_id) VALUES ($1, $2, $3, true, $4) ON CONFLICT (email) DO NOTHING",
-            [childEmail, tempPass, 'child', parentId]
+            `INSERT INTO users (email, password, role, is_verified, parent_id) 
+             VALUES ($1, $2, 'child', true, $3) 
+             ON CONFLICT (email) DO UPDATE SET parent_id = EXCLUDED.parent_id`,
+            [childEmail, tempPass, parentId]
         );
 
-        const inviteLink = `http://192.168.1.15:3000/child-login?email=${childEmail}`;
+        // 2. RENDER LINKINI OTOMATIK ALALIM
+        // req.get('host') komutu, siten render'da ise render linkini, localhost'ta ise localhostu otomatik getirir.
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const inviteLink = `${protocol}://${host}/child-tasks.html?email=${childEmail}`;
         
-        await sendMail(childEmail, "Görev Sistemi Daveti", 
-            `Velin seni davet etti! Görevlerini görmek için buraya tıkla: <a href="${inviteLink}">Görevlerime Git</a><br>Geçici Şifren: ${tempPass}`);
+        // 3. Mail Gönderimi
+        await sendMail(
+            childEmail, 
+            "Görev Sistemi Daveti", 
+            `<h3>Harika Haber!</h3>
+             Velin seni aile görev sistemine davet etti.<br><br>
+             <b>Görevlerini görmek için buraya tıkla:</b> <a href="${inviteLink}">Görevlerime Git</a><br>
+             <b>Geçici Şifren:</b> ${tempPass}`
+        );
         
-        res.json({ success: true, message: "Davet gönderildi!" });
+        res.json({ success: true, message: "Davet başarıyla gönderildi!" });
     } catch (err) {
-        res.status(500).json({ error: "Davet gönderilemedi." });
+        console.error("Davet hatası:", err);
+        res.status(500).json({ error: "Davet gönderilemedi. Veritabanı hatası oluştu." });
     }
 });
 app.post('/register', async (req, res) => {
