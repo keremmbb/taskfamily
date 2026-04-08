@@ -58,14 +58,17 @@ app.post('/add-task', async (req, res) => {
     }
 });
 app.post('/invite-child', async (req, res) => {
-            const { childEmail, parentId } = req.body; 
-             if (!parentId) {
-             return res.status(400).json({ error: "Ebeveyn ID bilgisi eksik!" });
-       }
+    const { childEmail, parentId } = req.body; 
+    
+    // Güvenlik kontrolü
+    if (!parentId) {
+        return res.status(400).json({ error: "Ebeveyn ID bilgisi eksik!" });
+    }
+
     const tempPass = "123456"; 
     
     try {
-        // 1. Veritabanı Kaydı
+        // --- 1. BURASI: Veritabanı Kaydı ---
         await db.query(
             `INSERT INTO users (email, password, role, is_verified, parent_id) 
              VALUES ($1, $2, 'child', true, $3) 
@@ -73,28 +76,22 @@ app.post('/invite-child', async (req, res) => {
             [childEmail, tempPass, parentId]
         );
 
-        // 2. Senin Render Linkin (Kesin ve Net)
+        // Davet Linki ve Mail İçeriği Hazırlığı
         const inviteLink = `https://taskfamily-app.onrender.com/child-tasks.html?email=${childEmail}`;
-        
-        // 3. Mail İçeriği (HTML formatında tıklanabilir link)
-        const mailBody = `
-            <h3>Merhaba!</h3>
-            <p>Aile görev sistemine davet edildin.</p>
-            <p><b>Görevlerini görmek için şu butona tıkla:</b></p>
-            <a href="${inviteLink}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Görevlerime Git
-            </a>
-            <p><br>Veya şu linki tarayıcına yapıştır:<br> ${inviteLink}</p>
-            <p>Geçici Şifren: <b>${tempPass}</b></p>
-        `;
+        const mailBody = `<h3>Merhaba!</h3><p>Davet edildin. Link: ${inviteLink}</p>`;
 
-        await sendMail(childEmail, "Görev Sistemi Daveti", mailBody);
-        
-        res.json({ success: true, message: "Davet başarıyla gönderildi!" });
+        // --- 2. BURASI: Mail Gönderme (await yok!) ---
+        // Mail arka planda çalışır, hata olsa bile terminale yazar ama uygulamayı dondurmaz.
+        sendMail(childEmail, "Görev Sistemi Daveti", mailBody)
+            .catch(e => console.log("Mail gönderiminde arka plan hatası:", e.message));
+
+        // --- 3. BURASI: Kullanıcıya Cevap ---
+        // Kod buraya anında ulaşır, böylece ekranda "hiçbir şey olmuyor" gibi gözükmez.
+        return res.json({ success: true, message: "Davet başarıyla gönderildi!" });
 
     } catch (err) {
-        console.error("Davet gönderilirken hata oluştu:", err);
-        res.status(500).json({ error: "Sunucu hatası: Davet gönderilemedi." });
+        console.error("Veritabanı hatası:", err);
+        return res.status(500).json({ error: "Sistem hatası: Kayıt yapılamadı." });
     }
 });
 app.post('/register', async (req, res) => {
