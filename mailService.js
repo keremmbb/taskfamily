@@ -3,14 +3,15 @@ require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // 587 için false olmalı
+  port: 465, // En güvenli Gmail portu
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
   tls: {
-    rejectUnauthorized: false // Sertifika hatalarını geçer
+    // Sunucu bazlı bağlantı reddini önlemek için kritik ayar
+    rejectUnauthorized: false
   }
 });
 
@@ -23,9 +24,8 @@ const sendMail = async (to, subject, html) => {
       html
     });
     console.log(`📧 Mail başarıyla gönderildi: ${to}`);
-    return true;
   } catch (error) {
-    console.error('❌ Mail hatası detayı:', error.message);
+    console.error('❌ Mail gönderme hatası detayı:', error.message);
     throw error;
   }
 };
