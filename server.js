@@ -95,38 +95,33 @@ app.post('/invite-child', async (req, res) => {
     }
 });
 app.post('/register', async (req, res) => {
-  const { email, password, role } = req.body;
-  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const { email, password, role } = req.body;
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-  try {
-    const userRole = role || 'parent';
-    const cleanEmail = email.toLowerCase().trim();
+    try {
+        const userEmail = email.toLowerCase().trim();
 
-    // ON CONFLICT (email) kısmını is_verified false olanlar için güncellenebilir yapıyoruz
-    await db.query(
-        `INSERT INTO users (email, password, role, is_verified, verification_code) 
-         VALUES ($1, $2, $3, false, $4) 
-         ON CONFLICT (email) 
-         DO UPDATE SET 
-            password = EXCLUDED.password, 
-            verification_code = EXCLUDED.verification_code
-         WHERE users.is_verified = false`, // Sadece onaylanmamış hesapları tekrar kayda izin ver
-         [cleanEmail, password, userRole, verificationCode]
-    );
+        // 1. Veritabanı işlemi (ON CONFLICT ile hata almayı engelliyoruz)
+        await db.query(
+            `INSERT INTO users (email, password, role, is_verified, verification_code) 
+             VALUES ($1, $2, $3, false, $4) 
+             ON CONFLICT (email) DO UPDATE SET 
+             verification_code = EXCLUDED.verification_code`,
+             [userEmail, password, role || 'parent', verificationCode]
+        );
 
-    // Maili beklemeden gönderiyoruz (takılmayı önlemek için)
-    sendMail(cleanEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
-        .catch(err => console.error("Mail arka plan hatası:", err));
+        // 2. KRİTİK: Mail gönderme işleminin başına 'await' KOYMA!
+        // Mail arka planda denensin, sunucu cevabı hemen dönsün.
+        sendMail(userEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
+            .catch(e => console.error("Arka plan mail hatası:", e.message));
 
-    res.json({ success: true, message: "Kayıt/Güncelleme başarılı, maili kontrol et!" });
-  } catch (err) {
-    console.error("Kayıt Hatası Detayı:", err);
-    // Eğer mail zaten onaylıysa ve tekrar kayıt olmaya çalışıyorsa:
-    if (err.code === '23505') {
-        return res.status(400).json({ success: false, error: "Bu e-posta zaten onaylı bir hesaba ait. Giriş yapmayı deneyin." });
+        // 3. Kullanıcıyı bekletmeden hemen cevap ver
+        return res.json({ success: true, message: "Kod gönderildi!" });
+
+    } catch (err) {
+        console.error("Kayıt Hatası:", err.message);
+        return res.status(500).json({ success: false, error: "Veritabanı hatası oluştu." });
     }
-    res.status(500).json({ success: false, error: "Sunucu hatası oluştu." });
-  }
 });
 
 app.post("/verify-code", async (req, res) => {
