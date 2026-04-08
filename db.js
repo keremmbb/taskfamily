@@ -1,16 +1,16 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Sadece DATABASE_URL kullanarak bağlanıyoruz
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  // Burası çok kritik, isimlendirme Environment ile aynı olmalı
+  connectionString: process.env.DATABASE_URL, 
   ssl: {
     rejectUnauthorized: false
   }
 });
 
 pool.on('connect', () => {
-  console.log('✅ Veritabanına başarıyla bağlanıldı!');
+  console.log('✅ Veritabanına bağlanıldı!');
 });
 
 module.exports = pool;
