@@ -241,37 +241,47 @@
         }
 
       async function handleRegister() {
+    // 1. Inputlardan verileri alıyoruz
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-pass').value;
-    const btn = document.querySelector('#register-form .submit-btn');
 
-    if(!email || !password) return alert("Lütfen boş alan bırakmayın.");
+    // Basit boş kontrolü
+    if (!email || !password) {
+        alert("Lütfen tüm alanları doldurun!");
+        return;
+    }
+
+    console.log("Kayıt isteği gönderiliyor...");
 
     try {
-        btn.disabled = true;
-        btn.innerText = "Gönderiliyor...";
-
-        const res = await fetch('/register', {
+        // 2. Sunucuya (server.js) istek gönderiyoruz
+        const response = await fetch('/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, role: 'parent' })
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                role: 'parent' // Ebeveyn kaydı olduğu için
+            })
         });
 
-        const data = await res.json();
+        const data = await response.json();
 
-        if(data.success) {
-            savedEmail = email;
-            document.getElementById('register-form').classList.add('hidden');
-            document.getElementById('verify-form').classList.remove('hidden');
-        } else { 
-            // Burada "Zaten kayıtlı" gibi hataları görebileceksin
-            alert(data.error || "Bir hata oluştu!"); 
+        // 3. Sunucudan gelen cevaba göre hareket ediyoruz
+        if (data.success) {
+            alert("Doğrulama kodu e-postanıza gönderildi! Lütfen kontrol edin.");
+            
+            // Kod gönderildikten sonra doğrulama inputunu gösterebilirsin
+            // Örn: document.getElementById('verify-section').style.display = 'block';
+        } else {
+            alert("Hata: " + (data.error || "Kod gönderilemedi."));
         }
-    } catch (err) {
-        alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Doğrulama Kodu Gönder";
+
+    } catch (error) {
+        console.error("İstek hatası:", error);
+        alert("Sunucuya bağlanılamadı. Lütfen terminali kontrol edin.");
     }
 }
 async function handleVerify() {
