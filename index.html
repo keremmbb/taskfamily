@@ -80,7 +80,7 @@
                 <p style="margin-bottom:15px; color:#666;">Hesap oluşturmak için bilgilerinizi girin.</p>
                 <input type="email" id="reg-email" placeholder="E-posta Adresiniz">
                 <input type="password" id="reg-pass" placeholder="Şifreniz">
-                <button type="button" class="submit-btn" onclick="handleRegister()">Doğrulama Kodu Gönder</button>
+                <button type="button" class="submit-btn" onclick="alert('JS çalışıyor'); handleRegister();">Doğrulama Kodu Gönder</button>
             </div>
 
             <div id="verify-form" class="hidden">
@@ -114,57 +114,49 @@
         }
 
         async function handleRegister() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-pass').value;
+    console.log("Fonksiyon tetiklendi!"); // Konsolda bunu görmelisin
 
-            if (!email || !password) return alert("Alanları doldurun!");
+    // Inputları alırken hata payını sıfırlayalım
+    const emailInput = document.getElementById('reg-email');
+    const passInput = document.getElementById('reg-pass');
 
-            try {
-                const res = await fetch('/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
+    if (!emailInput || !passInput) {
+        console.error("HATA: Inputlar bulunamadı! ID'leri kontrol et.");
+        return;
+    }
 
-                const data = await res.json();
-                
-                if (data.success) {
-                    savedEmail = email; // KRİTİK: Maili kaydet ki onaylarken kullanalım
-                    alert("Doğrulama kodu gönderildi!");
-                    
-                    // Formları değiştir
-                    document.getElementById('register-form').classList.add('hidden');
-                    document.getElementById('verify-form').classList.remove('hidden');
-                } else {
-                    alert("Hata: " + data.error);
-                }
-            } catch (err) {
-                alert("Sunucu hatası!");
-            }
+    const email = emailInput.value;
+    const password = passInput.value;
+
+    if (!email || !password) {
+        alert("Lütfen tüm alanları doldurun!");
+        return;
+    }
+
+    try {
+        console.log("İstek gönderiliyor: ", email);
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password })
+        });
+
+        const data = await response.json();
+        console.log("Sunucu yanıtı:", data);
+        
+        if (data.success) {
+            savedEmail = email; 
+            alert("Başarılı! Doğrulama kodu gönderildi.");
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('verify-form').classList.remove('hidden');
+        } else {
+            alert("Hata: " + (data.error || data.message));
         }
-
-        async function handleVerify() {
-            const code = document.getElementById('v-code').value;
-            if(!code) return alert("Kodu girin!");
-
-            try {
-                const res = await fetch('/verify-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: savedEmail, code })
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    alert("Doğrulama başarılı! Giriş yapabilirsiniz.");
-                    openAuth('login');
-                } else { 
-                    alert(data.message || "Kod hatalı!"); 
-                }
-            } catch (error) {
-                alert("Bağlantı hatası!");
-            }
-        }
+    } catch (err) {
+        console.error("Bağlantı Hatası:", err);
+        alert("Sunucuya bağlanılamadı. Lütfen Node.js terminalini kontrol edin.");
+    }
+}
 
         async function handleLogin() {
             const email = document.getElementById('log-email').value;
