@@ -70,13 +70,10 @@ app.post('/invite-child', async (req, res) => {
         const inviteLink = `https://taskfamily-app.onrender.com/child-tasks.html?email=${childEmail}`;
         
         await sendMail(
-            childEmail, 
-            "Görev Sistemi Daveti", 
-            `<h3>Selam!</h3>
-             Ailen seni görev sistemine davet etti.<br><br>
-             <b>Görevlerini görmek ve sisteme girmek için tıkla:</b><br>
-             <a href="${inviteLink}" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Görevlerime Git</a><br><br>
-             <b>Geçici Şifren:</b> ${tempPass}`
+           childEmail, 
+           "Görev Sistemi Daveti", 
+           `Selam! Görevlerini görmek için şu linke tıkla: <br>
+           <a href="${inviteLink}">${inviteLink}</a>` 
         );
         
         res.json({ success: true, message: "Davet linki başarıyla gönderildi!" });
