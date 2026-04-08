@@ -80,7 +80,7 @@
                 <p style="margin-bottom:15px; color:#666;">Hesap oluşturmak için bilgilerinizi girin.</p>
                 <input type="email" id="reg-email" placeholder="E-posta Adresiniz">
                 <input type="password" id="reg-pass" placeholder="Şifreniz">
-                <button type="button" class="submit-btn" onclick="alert('JS çalışıyor'); handleRegister();">Doğrulama Kodu Gönder</button>
+                <button type="button" class="submit-btn" id="testBtn">Doğrulama Kodu Gönder</button>
             </div>
 
             <div id="verify-form" class="hidden">
@@ -179,6 +179,10 @@
                 alert("Giriş hatası!");
             }
         }
+        document.getElementById('testBtn').addEventListener('click', function() {
+        alert("Butona basıldı! JavaScript bağlantısı başarılı.");
+        handleRegister(); 
+    });
 
         window.onclick = function(event) {
             if (event.target == document.getElementById('authModal')) closeAuth();
