@@ -1,16 +1,15 @@
-const { Pool } = require('pg');
-require('dotenv').config();
-
-const pool = new Pool({
-  // Burası çok kritik, isimlendirme Environment ile aynı olmalı
-  connectionString: process.env.DATABASE_URL, 
-  ssl: {
-    rejectUnauthorized: false
+{
+  "name": "taskfamily",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "pg": "^8.11.0",
+    "nodemailer": "^6.9.0",
+    "dotenv": "^16.4.5"
   }
-});
-
-pool.on('connect', () => {
-  console.log('✅ Veritabanına bağlanıldı!');
-});
-
-module.exports = pool;
+}
