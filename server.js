@@ -43,6 +43,9 @@ app.get('/get-child-tasks', async (req, res) => {
         res.json(result.rows);
     } catch (err) { res.status(500).send("Hata"); }
 });
+app.get('/child-tasks.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'child-tasks.html'));
+});
 
 // --- API ENDPOINTLERİ ---
 app.post('/add-task', async (req, res) => {

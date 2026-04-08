@@ -55,6 +55,23 @@
         });
         if(res.ok) loadMyTasks(); // Listeyi yenile
     }
+    async function loadMyTasks() {
+    if (!childEmail) {
+        document.body.innerHTML = "<h1>Hata: E-posta adresi bulunamadı!</h1>";
+        return;
+    }
+
+    try {
+        const res = await fetch(`/get-child-tasks?email=${childEmail}`);
+        if (!res.ok) throw new Error("Veriler alınamadı");
+        
+        const tasks = await res.json();
+        // ... mevcut kodun devamı ...
+    } catch (err) {
+        console.error("Yükleme hatası:", err);
+        document.getElementById('tasks-container').innerHTML = "<p>Görevler yüklenirken bir sorun oluştu.</p>";
+    }
+}
 
     window.onload = loadMyTasks;
 </script>
