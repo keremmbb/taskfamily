@@ -240,66 +240,93 @@
             document.getElementById('authModal').style.display = 'none';
         }
 
-        async function handleRegister() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-pass').value;
+       async function handleRegister() {
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-pass').value;
+    const btn = document.querySelector('#register-form .submit-btn'); // Butonu seç
 
-            if(!email || !password) return alert("Lütfen boş alan bırakmayın.");
+    if(!email || !password) return alert("Lütfen boş alan bırakmayın.");
 
-            const res = await fetch('/register', {
+    try {
+        // Butonu devre dışı bırak ve görsel geri bildirim ver
+        btn.disabled = true;
+        btn.innerText = "Gönderiliyor...";
+        btn.style.opacity = "0.7";
+
+        const res = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, role: 'parent' })
+        });
+
+        const data = await res.json();
+
+        if(data.success) {
+            savedEmail = email;
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('verify-form').classList.remove('hidden');
+        } else { 
+            // Sunucudan gelen hatayı göster (Örn: "Mail gönderilemedi")
+            alert("Hata: " + (data.error || data.detail || "Bir sorun oluştu.")); 
+        }
+    } catch (err) {
+        console.error("Fetch hatası:", err);
+        alert("Sunucuya bağlanılamadı. Lütfen internetinizi veya Render loglarını kontrol edin.");
+    } finally {
+        // İşlem bitince butonu eski haline getir
+        btn.disabled = false;
+        btn.innerText = "Doğrulama Kodu Gönder";
+        btn.style.opacity = "1";
+    }
+}
+async function handleVerify() {
+        const code = document.getElementById('v-code').value;
+        if(!code) return alert("Lütfen mailinize gelen 6 haneli kodu girin.");
+
+        try {
+            const res = await fetch('/verify-code', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, role: 'parent' })
+                body: JSON.stringify({ email: savedEmail, code })
             });
             const data = await res.json();
+            
             if(data.success) {
-                savedEmail = email;
-                document.getElementById('register-form').classList.add('hidden');
-                document.getElementById('verify-form').classList.remove('hidden');
-            } else { alert(data.error || "Hata oluştu!"); }
+                alert("Hesabınız başarıyla doğrulandı! Şimdi giriş yapabilirsiniz.");
+                openAuth('login'); // Doğrulama bitince giriş formuna atar
+            } else { 
+                alert(data.message || "Kod hatalı veya süresi dolmuş!"); 
+            }
+        } catch (error) {
+            alert("Doğrulama sırasında bir bağlantı hatası oluştu.");
         }
-
-        async function handleVerify() {
-    const code = document.getElementById('v-code').value;
-    const res = await fetch('/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: savedEmail, code })
-    });
-    const data = await res.json();
-    
-    if(data.success) {
-        // BAŞARILI OLUNCA BURASI ÇALIŞIR
-        window.location.href = "/dashboard.html"; 
-    } else { 
-        alert("Kod hatalı!"); 
     }
-}
 
         async function handleLogin() {
-    const email = document.getElementById('log-email').value;
-    const password = document.getElementById('log-pass').value;
+        const email = document.getElementById('log-email').value;
+        const password = document.getElementById('log-pass').value;
 
-    const res = await fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
+        try {
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
 
-    if(data.success) {
-        // ROL KONTROLÜ BURADA YAPILIYOR
-        if(data.role === 'child') {
-            // Eğer giriş yapan çocuksa görev sayfasına git (e-postasını da yanına al)
-            window.location.href = `/child-login?email=${email}`;
-        } else {
-            // Eğer giriş yapan veliyse yönetim paneline git
-            window.location.href = "/dashboard.html";
+            if(data.success) {
+                if(data.role === 'child') {
+                    window.location.href = `/child-login?email=${email}`;
+                } else {
+                    window.location.href = "/dashboard.html";
+                }
+            } else { 
+                alert(data.message || "E-posta veya şifre hatalı!"); 
+            }
+        } catch (error) {
+            alert("Giriş hatası oluştu.");
         }
-    } else { 
-        alert(data.message || "E-posta veya şifre hatalı!"); 
     }
-}
 
         // Modal dışına tıklayınca kapatma
         window.onclick = function(event) {
