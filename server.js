@@ -100,27 +100,26 @@ app.post('/register', async (req, res) => {
 
     try {
         const userEmail = email.toLowerCase().trim();
-        
-        // Önce veritabanına kaydet/güncelle
+
+        // 1. Önce kullanıcıyı kaydet veya kodunu güncelle (ON CONFLICT çok önemli)
         await db.query(
             `INSERT INTO users (email, password, role, is_verified, verification_code) 
              VALUES ($1, $2, $3, false, $4) 
              ON CONFLICT (email) DO UPDATE SET 
-             password = EXCLUDED.password, 
              verification_code = EXCLUDED.verification_code`,
              [userEmail, password, role || 'parent', verificationCode]
         );
 
-        // Maili gönder ama sonucu beklemeden (await kullanmadan) cevap dön
-        sendMail(userEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
-            .catch(e => console.error("Mail arka planda hata verdi:", e.message));
+        // 2. KRİTİK NOKTA: await kullanmıyoruz! 
+        // Mail arka planda gitmeye çalışsın, biz kullanıcıyı bekletmeyelim.
+        sendMail(userEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
 
-        // Kullanıcıya hemen cevap veriyoruz ki buton kilitlenmesin
-        res.json({ success: true, message: "Kayıt başarılı! Lütfen mail kutunu kontrol et." });
+        // 3. Hemen cevap dönüyoruz
+        return res.json({ success: true, message: "Kayıt alındı, mail gönderiliyor..." });
 
     } catch (err) {
         console.error("Kayıt Hatası:", err.message);
-        res.status(500).json({ success: false, error: "Veritabanı hatası oluştu." });
+        return res.status(500).json({ success: false, error: "Veritabanı hatası." });
     }
 });
 
