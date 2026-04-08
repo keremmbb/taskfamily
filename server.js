@@ -98,57 +98,42 @@ app.post('/invite-child', async (req, res) => {
     }
 });
 app.post('/register', async (req, res) => {
-    const { email, password, role } = req.body;
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const { email, password } = req.body;
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-        const userEmail = email.toLowerCase().trim();
-
-        // 1. Veritabanı işlemi (ON CONFLICT ile hata almayı engelliyoruz)
+        // Kullanıcıyı veritabanına ekle (veya güncelle)
         await db.query(
-            `INSERT INTO users (email, password, role, is_verified, verification_code) 
-             VALUES ($1, $2, $3, false, $4) 
-             ON CONFLICT (email) DO UPDATE SET 
-             verification_code = EXCLUDED.verification_code`,
-             [userEmail, password, role || 'parent', verificationCode]
+            "INSERT INTO users (email, password, role, verification_code) VALUES ($1, $2, 'parent', $3) ON CONFLICT (email) DO UPDATE SET verification_code = $3",
+            [email, password, code]
         );
 
-        // 2. KRİTİK: Mail gönderme işleminin başına 'await' KOYMA!
-        // Mail arka planda denensin, sunucu cevabı hemen dönsün.
-        sendMail(userEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
-            .catch(e => console.error("Arka plan mail hatası:", e.message));
+        // KRİTİK: Mail gönderme işlemini bekle
+        await sendMail(
+            email, 
+            "TaskFamily Doğrulama Kodunuz", 
+            `<h1>Hoş Geldiniz!</h1><p>Doğrulama kodunuz: <b>${code}</b></p>`
+        );
 
-        // 3. Kullanıcıyı bekletmeden hemen cevap ver
-        return res.json({ success: true, message: "Kod gönderildi!" });
-
+        res.json({ success: true, message: "Kod gönderildi" });
     } catch (err) {
-        console.error("Kayıt Hatası:", err.message);
-        return res.status(500).json({ success: false, error: "Veritabanı hatası oluştu." });
+        console.error("Kayıt hatası:", err);
+        res.status(500).json({ error: "Kayıt sırasında bir hata oluştu." });
     }
 });
 
-app.post("/verify-code", async (req, res) => {
+app.post('/verify-code', async (req, res) => {
     const { email, code } = req.body;
-
     try {
-        const result = await db.query(
-            "SELECT * FROM users WHERE email = $1 AND verification_code = $2",
-            [email.trim(), code.trim()]
-        );
-
+        const result = await db.query("SELECT * FROM users WHERE email = $1 AND verification_code = $2", [email, code]);
         if (result.rows.length > 0) {
-            await db.query(
-                "UPDATE users SET is_verified = true, verification_code = NULL WHERE email = $1",
-                [email.trim()]
-            );
-            
-            res.json({ success: true, message: "E-posta adresiniz başarıyla doğrulandı! Şimdi giriş yapabilirsiniz." });
+            await db.query("UPDATE users SET is_verified = true WHERE email = $1", [email]);
+            res.json({ success: true });
         } else {
-            res.status(400).json({ success: false, message: "Girdiğiniz kod hatalı veya süresi dolmuş." });
+            res.status(400).json({ success: false, message: "Kod hatalı!" });
         }
-    } catch (error) {
-        console.error("Doğrulama hatası:", error);
-        res.status(500).json({ error: "Sunucu hatası oluştu." });
+    } catch (err) {
+        res.status(500).json({ error: "Sistem hatası" });
     }
 });
 
@@ -206,9 +191,6 @@ app.post('/complete-task', async (req, res) => {
 db.query('SELECT current_database()').then(res => console.log("Kodun bağlandığı DB:", res.rows[0].current_database));
 
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Sunucu yayında!`);
-    console.log(`🏠 Bilgisayardan: http://localhost:${PORT}`);
-    console.log(`📱 Telefondan: http://192.168.1.15:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`🚀 Sunucu ${PORT} portunda yayında!`);
 });
