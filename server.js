@@ -59,7 +59,6 @@ app.post('/invite-child', async (req, res) => {
     const tempPass = "123456"; 
     
     try {
-        // 1. Çocuğu kaydet veya varsa parent_id'sini güncelle
         await db.query(
             `INSERT INTO users (email, password, role, is_verified, parent_id) 
              VALUES ($1, $2, 'child', true, $3) 
@@ -67,26 +66,23 @@ app.post('/invite-child', async (req, res) => {
             [childEmail, tempPass, parentId]
         );
 
-        // 2. RENDER LINKINI OTOMATIK ALALIM
-        // req.get('host') komutu, siten render'da ise render linkini, localhost'ta ise localhostu otomatik getirir.
-        const protocol = req.protocol;
-        const host = req.get('host');
-        const inviteLink = `${protocol}://${host}/child-tasks.html?email=${childEmail}`;
+        // SENİN RENDER LİNKİNİ BURAYA KOYDUM:
+        const inviteLink = `https://taskfamily-app.onrender.com/child-tasks.html?email=${childEmail}`;
         
-        // 3. Mail Gönderimi
         await sendMail(
             childEmail, 
             "Görev Sistemi Daveti", 
-            `<h3>Harika Haber!</h3>
-             Velin seni aile görev sistemine davet etti.<br><br>
-             <b>Görevlerini görmek için buraya tıkla:</b> <a href="${inviteLink}">Görevlerime Git</a><br>
+            `<h3>Selam!</h3>
+             Ailen seni görev sistemine davet etti.<br><br>
+             <b>Görevlerini görmek ve sisteme girmek için tıkla:</b><br>
+             <a href="${inviteLink}" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Görevlerime Git</a><br><br>
              <b>Geçici Şifren:</b> ${tempPass}`
         );
         
-        res.json({ success: true, message: "Davet başarıyla gönderildi!" });
+        res.json({ success: true, message: "Davet linki başarıyla gönderildi!" });
     } catch (err) {
         console.error("Davet hatası:", err);
-        res.status(500).json({ error: "Davet gönderilemedi. Veritabanı hatası oluştu." });
+        res.status(500).json({ error: "Sistem hatası oluştu." });
     }
 });
 app.post('/register', async (req, res) => {
