@@ -9,7 +9,11 @@ app.use(cors());
 app.use(express.json());
 
 // 1. Proje klasöründeki tüm dosyaları (html, css, js) tarayıcıya açar
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, '/')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // 2. Tarayıcıda direkt localhost:3000 yazınca index.html'i açar
 app.get('/', (req, res) => {
