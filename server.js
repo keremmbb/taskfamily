@@ -95,32 +95,34 @@ app.post('/invite-child', async (req, res) => {
     }
 });
 app.post('/register', async (req, res) => {
-    const { email, password, role } = req.body;
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const { email, password, role } = req.body;
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    try {
-        const userEmail = email.toLowerCase().trim();
+  try {
+    const userRole = role || 'parent';
 
-        // 1. Önce kullanıcıyı kaydet veya kodunu güncelle (ON CONFLICT çok önemli)
-        await db.query(
-            `INSERT INTO users (email, password, role, is_verified, verification_code) 
-             VALUES ($1, $2, $3, false, $4) 
-             ON CONFLICT (email) DO UPDATE SET 
-             verification_code = EXCLUDED.verification_code`,
-             [userEmail, password, role || 'parent', verificationCode]
-        );
+    // Veritabanı kaydı
+    await db.query(
+        `INSERT INTO users (email, password, role, is_verified, verification_code) 
+         VALUES ($1, $2, $3, false, $4) 
+         ON CONFLICT (email) DO UPDATE SET 
+         password = EXCLUDED.password, 
+         verification_code = EXCLUDED.verification_code`,
+         [email, password, userRole, verificationCode]
+    );
 
-        // 2. KRİTİK NOKTA: await kullanmıyoruz! 
-        // Mail arka planda gitmeye çalışsın, biz kullanıcıyı bekletmeyelim.
-        sendMail(userEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
+    // KRİTİK DEĞİŞİKLİK: Buradaki 'await' kelimesini sildik.
+    // Sunucu mailin gitmesini beklemeden alt satıra geçecek.
+    sendMail(email, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
+        .catch(err => console.error("Arka plan mail hatası:", err));
 
-        // 3. Hemen cevap dönüyoruz
-        return res.json({ success: true, message: "Kayıt alındı, mail gönderiliyor..." });
-
-    } catch (err) {
-        console.error("Kayıt Hatası:", err.message);
-        return res.status(500).json({ success: false, error: "Veritabanı hatası." });
-    }
+    // Kullanıcıya anında cevap dönüyoruz
+    res.json({ success: true, message: "Kayıt başarılı, mail gönderiliyor!" });
+    
+  } catch (err) {
+    console.error("Kayıt Hatası Detayı:", err);
+    res.status(500).json({ error: "Kayıt sırasında bir hata oluştu.", detail: err.message });
+  }
 });
 
 app.post("/verify-code", async (req, res) => {

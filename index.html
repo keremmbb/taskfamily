@@ -248,12 +248,8 @@
     if(!email || !password) return alert("Lütfen boş alan bırakmayın.");
 
     try {
-        // Geri bildirim ver: Butonu pasif yap
         btn.disabled = true;
-        btn.innerText = "İşlem yapılıyor, lütfen bekleyin...";
-        btn.style.opacity = "0.7";
-
-        console.log("Sunucuya istek gönderiliyor...");
+        btn.innerText = "İşleniyor..."; // Kullanıcıya çalıştığını göster
 
         const res = await fetch('/register', {
             method: 'POST',
@@ -261,29 +257,21 @@
             body: JSON.stringify({ email, password, role: 'parent' })
         });
 
-        // Sunucu hata kodu döndürürse (500, 404 vb.)
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || "Sunucu yanıt vermedi.");
-        }
-
         const data = await res.json();
-        
+
         if(data.success) {
             savedEmail = email;
             document.getElementById('register-form').classList.add('hidden');
             document.getElementById('verify-form').classList.remove('hidden');
         } else { 
-            alert("Hata: " + data.error); 
+            alert("Sunucu Hatası: " + (data.error || "Bilinmeyen bir hata.")); 
         }
     } catch (err) {
-        console.error("Kayıt Hatası:", err);
-        alert("Bağlantı hatası! Sunucu çok yavaş olabilir veya internetinizde sorun olabilir. Hata: " + err.message);
+        console.error("İstek Hatası:", err);
+        alert("Bağlantı kurulamadı! Sunucu kapalı olabilir veya internet kesik.");
     } finally {
-        // Ne olursa olsun butonu eski haline getir
         btn.disabled = false;
         btn.innerText = "Doğrulama Kodu Gönder";
-        btn.style.opacity = "1";
     }
 }
 async function handleVerify() {
