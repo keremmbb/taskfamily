@@ -1,20 +1,24 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// SSL ayarını sadece Render'da (üretim ortamında) aktif et, lokalde kapat
-const isProduction = process.env.NODE_ENV === 'production' || process.env.DATABASE_URL?.includes('render.com');
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: isProduction ? { rejectUnauthorized: false } : false
+  // Eğer Render linki kullanılıyorsa SSL her zaman zorunludur
+  ssl: process.env.DATABASE_URL?.includes('render.com') 
+    ? { rejectUnauthorized: false } 
+    : false
 });
 
 pool.on('connect', () => {
-  console.log('✅ Veritabanına başarıyla bağlanıldı!');
+  console.log('✅ Veritabanına bağlantı sağlandı!');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Beklenmedik veritabanı hatası:', err);
+  console.error('❌ Veritabanı hatası:', err);
 });
 
-module.exports = pool;
+// server.js'de "db" olarak çağırdığın için kafa karışıklığını önleyelim
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  pool: pool
+};

@@ -55,10 +55,14 @@ app.post('/add-task', async (req, res) => {
     }
 });
 app.post('/invite-child', async (req, res) => {
-    const { childEmail, parentId } = req.body;
+            const { childEmail, parentId } = req.body; 
+             if (!parentId) {
+             return res.status(400).json({ error: "Ebeveyn ID bilgisi eksik!" });
+       }
     const tempPass = "123456"; 
     
     try {
+        // 1. Veritabanı Kaydı
         await db.query(
             `INSERT INTO users (email, password, role, is_verified, parent_id) 
              VALUES ($1, $2, 'child', true, $3) 
@@ -66,20 +70,28 @@ app.post('/invite-child', async (req, res) => {
             [childEmail, tempPass, parentId]
         );
 
-        // SENİN RENDER LİNKİNİ BURAYA KOYDUM:
+        // 2. Senin Render Linkin (Kesin ve Net)
         const inviteLink = `https://taskfamily-app.onrender.com/child-tasks.html?email=${childEmail}`;
         
-        await sendMail(
-           childEmail, 
-           "Görev Sistemi Daveti", 
-           `Selam! Görevlerini görmek için şu linke tıkla: <br>
-           <a href="${inviteLink}">${inviteLink}</a>` 
-        );
+        // 3. Mail İçeriği (HTML formatında tıklanabilir link)
+        const mailBody = `
+            <h3>Merhaba!</h3>
+            <p>Aile görev sistemine davet edildin.</p>
+            <p><b>Görevlerini görmek için şu butona tıkla:</b></p>
+            <a href="${inviteLink}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Görevlerime Git
+            </a>
+            <p><br>Veya şu linki tarayıcına yapıştır:<br> ${inviteLink}</p>
+            <p>Geçici Şifren: <b>${tempPass}</b></p>
+        `;
+
+        await sendMail(childEmail, "Görev Sistemi Daveti", mailBody);
         
-        res.json({ success: true, message: "Davet linki başarıyla gönderildi!" });
+        res.json({ success: true, message: "Davet başarıyla gönderildi!" });
+
     } catch (err) {
-        console.error("Davet hatası:", err);
-        res.status(500).json({ error: "Sistem hatası oluştu." });
+        console.error("Davet gönderilirken hata oluştu:", err);
+        res.status(500).json({ error: "Sunucu hatası: Davet gönderilemedi." });
     }
 });
 app.post('/register', async (req, res) => {
