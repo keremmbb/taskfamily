@@ -60,7 +60,6 @@ app.post('/add-task', async (req, res) => {
 app.post('/invite-child', async (req, res) => {
     const { childEmail, parentId } = req.body; 
     
-    // Güvenlik kontrolü
     if (!parentId) {
         return res.status(400).json({ error: "Ebeveyn ID bilgisi eksik!" });
     }
@@ -68,7 +67,7 @@ app.post('/invite-child', async (req, res) => {
     const tempPass = "123456"; 
     
     try {
-        // --- 1. BURASI: Veritabanı Kaydı ---
+        // 1. Önce Veritabanına Kaydet (Hata varsa catch'e düşer)
         await db.query(
             `INSERT INTO users (email, password, role, is_verified, parent_id) 
              VALUES ($1, $2, 'child', true, $3) 
@@ -76,22 +75,22 @@ app.post('/invite-child', async (req, res) => {
             [childEmail, tempPass, parentId]
         );
 
-        // Davet Linki ve Mail İçeriği Hazırlığı
+        // 2. Mail Göndermeyi Dene (Ama sonucu bekleme!)
+        // .catch ekleyerek mail hatası olsa bile sunucunun çökmesini engelliyoruz.
         const inviteLink = `https://taskfamily-app.onrender.com/child-tasks.html?email=${childEmail}`;
-        const mailBody = `<h3>Merhaba!</h3><p>Davet edildin. Link: ${inviteLink}</p>`;
+        const mailBody = `<h3>Merhaba!</h3> Davet edildin. Link: ${inviteLink}`;
 
-        // --- 2. BURASI: Mail Gönderme (await yok!) ---
-        // Mail arka planda çalışır, hata olsa bile terminale yazar ama uygulamayı dondurmaz.
         sendMail(childEmail, "Görev Sistemi Daveti", mailBody)
-            .catch(e => console.log("Mail gönderiminde arka plan hatası:", e.message));
+            .then(() => console.log("✅ Mail başarıyla gönderildi."))
+            .catch(err => console.error("❌ Mail Gönderim Hatası (Ama kayıt yapıldı):", err.message));
 
-        // --- 3. BURASI: Kullanıcıya Cevap ---
-        // Kod buraya anında ulaşır, böylece ekranda "hiçbir şey olmuyor" gibi gözükmez.
-        return res.json({ success: true, message: "Davet başarıyla gönderildi!" });
+        // 3. Kullanıcıya HEMEN cevap ver
+        // Mailin gidip gitmemesi bu cevabı engellemez.
+        return res.json({ success: true, message: "İşlem başarılı! (Mail arka planda gönderiliyor)" });
 
     } catch (err) {
-        console.error("Veritabanı hatası:", err);
-        return res.status(500).json({ error: "Sistem hatası: Kayıt yapılamadı." });
+        console.error("❌ Veritabanı Hatası:", err.message);
+        return res.status(500).json({ error: "Veritabanı hatası oluştu. Lütfen tekrar deneyin." });
     }
 });
 app.post('/register', async (req, res) => {
