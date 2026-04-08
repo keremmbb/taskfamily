@@ -103,10 +103,13 @@ app.post('/register', async (req, res) => {
     const userRole = role || 'parent';
 
     await db.query(
-      "INSERT INTO users (email, password, role, is_verified, verification_code) VALUES ($1, $2, $3, false, $4)",
-      [email, password, userRole, verificationCode]
-    );
-
+        `INSERT INTO users (email, password, role, is_verified, verification_code) 
+         VALUES ($1, $2, $3, false, $4) 
+         ON CONFLICT (email) DO UPDATE SET 
+         password = EXCLUDED.password, 
+         verification_code = EXCLUDED.verification_code`,
+         [email, password, userRole, verificationCode]
+   );
     // Mail gönderme kısmında hata oluşsa bile kullanıcı kaydedilmiş olur
     try {
         await sendMail(email, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
