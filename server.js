@@ -99,27 +99,27 @@ app.post('/register', async (req, res) => {
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
   try {
-    // role gelmezse varsayılan olarak 'parent' ata
     const userRole = role || 'parent';
+
+    // ÖNEMLİ: E-postayı küçük harfe çevirerek kontrol etmek çakışmaları önler
+    const normalizedEmail = email.toLowerCase().trim();
 
     await db.query(
         `INSERT INTO users (email, password, role, is_verified, verification_code) 
          VALUES ($1, $2, $3, false, $4) 
-         ON CONFLICT (email) DO UPDATE SET 
-         password = EXCLUDED.password, 
-         verification_code = EXCLUDED.verification_code`,
-         [email, password, userRole, verificationCode]
-   );
-    // Mail gönderme kısmında hata oluşsa bile kullanıcı kaydedilmiş olur
-    try {
-        await sendMail(email, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
-    } catch (mailErr) {
-        console.error("Mail gönderme hatası:", mailErr);
-    }
+         ON CONFLICT (email) 
+         DO UPDATE SET 
+            password = EXCLUDED.password, 
+            verification_code = EXCLUDED.verification_code,
+            is_verified = false`, // Tekrar kayıt oluyorsa doğrulamayı sıfırla
+         [normalizedEmail, password, userRole, verificationCode]
+    );
+
+    await sendMail(normalizedEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
 
     res.json({ success: true, message: "Kayıt başarılı, mailini kontrol et!" });
   } catch (err) {
-    console.error("Kayıt Hatası Detayı:", err); // Render loglarında hatanın tam nedenini görürüz
+    console.error("Kayıt Hatası Detayı:", err);
     res.status(500).json({ error: "Kayıt sırasında bir hata oluştu.", detail: err.message });
   }
 });
