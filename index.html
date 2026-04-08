@@ -5,52 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskFamily | Akıllı Görev Takibi</title>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg: #f8fafc;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; }
-
-        nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 1rem 10%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e2e8f0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -1px; }
-        .nav-buttons button { padding: 0.6rem 1.2rem; margin-left: 0.8rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; }
-        .btn-login { background: transparent; color: var(--text-main); }
-        .btn-login:hover { background: #f1f5f9; }
-        .btn-register { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); }
-        .btn-register:hover { background: var(--primary-hover); transform: translateY(-1px); }
-
-        .hero { padding: 120px 10% 80px; text-align: center; background: radial-gradient(circle at top right, #e0e7ff, transparent), radial-gradient(circle at bottom left, #f5f3ff, transparent); }
-        .hero h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(to right, #1e293b, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
-
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 4rem 10%; }
-        .feature-card { background: white; padding: 2.5rem; border-radius: 20px; border: 1px solid #f1f5f9; transition: transform 0.3s; }
-        .feature-card:hover { transform: translateY(-5px); }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .auth-container { background: white; padding: 2.5rem; border-radius: 24px; width: 100%; max-width: 420px; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .close-btn { position: absolute; top: 1.2rem; right: 1.2rem; font-size: 1.5rem; border: none; background: none; cursor: pointer; color: var(--text-muted); }
-
-        input { width: 100%; padding: 0.8rem 1rem; margin-bottom: 1rem; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 1rem; }
-        .submit-btn { width: 100%; padding: 0.9rem; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
-        .hidden { display: none; }
+        :root { --primary: #4f46e5; --primary-hover: #4338ca; --bg: #f8fafc; --text-main: #1e293b; --text-muted: #64748b; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); }
+        nav { background: white; padding: 1rem 10%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .nav-buttons button { padding: 0.6rem 1.2rem; margin-left: 0.8rem; border-radius: 10px; cursor: pointer; border: none; font-weight: 600; }
+        .btn-login { background: transparent; }
+        .btn-register { background: var(--primary); color: white; }
+        .hero { padding: 100px 10%; text-align: center; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .auth-container { background: white; padding: 2.5rem; border-radius: 20px; width: 100%; max-width: 400px; position: relative; }
+        .close-btn { position: absolute; top: 1rem; right: 1rem; cursor: pointer; font-size: 1.5rem; border: none; background: none; }
+        input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 10px; }
+        .submit-btn { width: 100%; padding: 0.9rem; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -59,17 +28,14 @@
         <div class="logo">TaskFamily</div>
         <div class="nav-buttons">
             <button class="btn-login" onclick="openAuth('login')">Giriş</button>
-            <button class="btn-register" onclick="openAuth('register')">Ücretsiz Kaydol</button>
+            <button class="btn-register" onclick="openAuth('register')">Kaydol</button>
         </div>
     </nav>
 
-    <div id="landing-page">
-        <section class="hero">
-            <h1>Aile İçi Düzeni<br>Birlikte İnşa Edin</h1>
-            <p>Çocuklarınıza sorumluluk kazandırırken ev işlerini eğlenceli birer göreve dönüştüren akıllı asistanınız.</p>
-            <button class="btn-register" style="padding: 1.2rem 2.5rem; font-size: 1.1rem;" onclick="openAuth('register')">Hemen Başlayın</button>
-        </section>
-    </div>
+    <section class="hero">
+        <h1>Aile İçi Düzeni Birlikte İnşa Edin</h1>
+        <button class="btn-register" style="padding: 1rem 2rem; margin-top: 20px;" onclick="openAuth('register')">Hemen Başla</button>
+    </section>
 
     <div id="authModal" class="modal-overlay">
         <div class="auth-container">
@@ -77,30 +43,35 @@
             
             <div id="register-form">
                 <h2>Ebeveyn Kaydı</h2>
-                <p style="margin-bottom:15px; color:#666;">Hesap oluşturmak için bilgilerinizi girin.</p>
-                <input type="email" id="reg-email" placeholder="E-posta Adresiniz">
-                <input type="password" id="reg-pass" placeholder="Şifreniz">
-                <button type="button" class="submit-btn" id="testBtn">Doğrulama Kodu Gönder</button>
+                <p style="margin-bottom:1rem; color:#666;">Bilgilerinizi giriniz.</p>
+                <input type="email" id="reg-email" placeholder="E-posta">
+                <input type="password" id="reg-pass" placeholder="Şifre">
+                <button type="button" class="submit-btn" onclick="handleRegister()">Kod Gönder</button>
             </div>
 
             <div id="verify-form" class="hidden">
                 <h2>Kodu Onayla</h2>
-                <p style="margin-bottom:15px; color:#666;">Mailinize gelen kodu giriniz.</p>
-                <input type="text" id="v-code" placeholder="000000" style="text-align: center; letter-spacing: 4px;">
-                <button class="submit-btn" onclick="handleVerify()">Hesabı Aktifleştir</button>
+                <p style="margin-bottom:1rem; color:#666;">Mailinize gelen 6 haneli kodu girin.</p>
+                <input type="text" id="v-code" placeholder="000000" style="text-align:center; letter-spacing:4px;">
+                <button type="button" class="submit-btn" onclick="handleVerify()">Onayla</button>
             </div>
 
             <div id="login-form" class="hidden">
                 <h2>Giriş Yap</h2>
                 <input type="email" id="log-email" placeholder="E-posta">
                 <input type="password" id="log-pass" placeholder="Şifre">
-                <button class="submit-btn" onclick="handleLogin()">Giriş Yap</button>
+                <button type="button" class="submit-btn" onclick="handleLogin()">Giriş</button>
             </div>
         </div>
     </div>
 
     <script>
-        let savedEmail = ""; // Mail adresini burada saklayacağız
+        let savedEmail = "";
+
+        // Sayfa yüklenince test (Alert gelmiyorsa dosya bozuktur)
+        window.onload = function() {
+            console.log("Script çalışıyor...");
+        };
 
         function openAuth(type) {
             document.getElementById('authModal').style.display = 'flex';
@@ -114,49 +85,54 @@
         }
 
         async function handleRegister() {
-    console.log("Fonksiyon tetiklendi!"); // Konsolda bunu görmelisin
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-pass').value;
 
-    // Inputları alırken hata payını sıfırlayalım
-    const emailInput = document.getElementById('reg-email');
-    const passInput = document.getElementById('reg-pass');
+            if (!email || !password) return alert("Eksik bilgi!");
 
-    if (!emailInput || !passInput) {
-        console.error("HATA: Inputlar bulunamadı! ID'leri kontrol et.");
-        return;
-    }
-
-    const email = emailInput.value;
-    const password = passInput.value;
-
-    if (!email || !password) {
-        alert("Lütfen tüm alanları doldurun!");
-        return;
-    }
-
-    try {
-        console.log("İstek gönderiliyor: ", email);
-        const response = await fetch('/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, password: password })
-        });
-
-        const data = await response.json();
-        console.log("Sunucu yanıtı:", data);
-        
-        if (data.success) {
-            savedEmail = email; 
-            alert("Başarılı! Doğrulama kodu gönderildi.");
-            document.getElementById('register-form').classList.add('hidden');
-            document.getElementById('verify-form').classList.remove('hidden');
-        } else {
-            alert("Hata: " + (data.error || data.message));
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role: 'parent' })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    savedEmail = email;
+                    alert("Kod gönderildi!");
+                    document.getElementById('register-form').classList.add('hidden');
+                    document.getElementById('verify-form').classList.remove('hidden');
+                } else {
+                    alert("Hata: " + (data.error || data.message));
+                }
+            } catch (err) {
+                alert("Sunucuya bağlanılamadı!");
+            }
         }
-    } catch (err) {
-        console.error("Bağlantı Hatası:", err);
-        alert("Sunucuya bağlanılamadı. Lütfen Node.js terminalini kontrol edin.");
-    }
-}
+
+        async function handleVerify() {
+            const code = document.getElementById('v-code').value;
+            if (!code) return alert("Kodu girin!");
+
+            try {
+                const res = await fetch('/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: savedEmail, code })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("Hesap onaylandı! Giriş yapabilirsiniz.");
+                    openAuth('login');
+                } else {
+                    alert(data.message || "Kod hatalı!");
+                }
+            } catch (err) {
+                alert("Doğrulama hatası!");
+            }
+        }
 
         async function handleLogin() {
             const email = document.getElementById('log-email').value;
@@ -170,19 +146,16 @@
                 });
                 const data = await res.json();
 
-                if(data.success) {
+                if (data.success) {
+                    localStorage.setItem('userId', data.userId);
                     window.location.href = data.role === 'child' ? `/child-login?email=${email}` : "/dashboard.html";
-                } else { 
-                    alert(data.message || "Giriş başarısız!"); 
+                } else {
+                    alert(data.message || "Giriş başarısız!");
                 }
-            } catch (error) {
+            } catch (err) {
                 alert("Giriş hatası!");
             }
         }
-        document.getElementById('testBtn').addEventListener('click', function() {
-        alert("Butona basıldı! JavaScript bağlantısı başarılı.");
-        handleRegister(); 
-    });
 
         window.onclick = function(event) {
             if (event.target == document.getElementById('authModal')) closeAuth();
