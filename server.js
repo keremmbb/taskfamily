@@ -100,27 +100,34 @@ app.post('/register', async (req, res) => {
 
   try {
     const userRole = role || 'parent';
-
-    // ÖNEMLİ: E-postayı küçük harfe çevirerek kontrol etmek çakışmaları önler
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Veritabanına kaydet veya varsa güncelle
     await db.query(
         `INSERT INTO users (email, password, role, is_verified, verification_code) 
          VALUES ($1, $2, $3, false, $4) 
-         ON CONFLICT (email) 
-         DO UPDATE SET 
-            password = EXCLUDED.password, 
-            verification_code = EXCLUDED.verification_code,
-            is_verified = false`, // Tekrar kayıt oluyorsa doğrulamayı sıfırla
+         ON CONFLICT (email) DO UPDATE SET 
+         password = EXCLUDED.password, 
+         verification_code = EXCLUDED.verification_code`,
          [normalizedEmail, password, userRole, verificationCode]
     );
 
-    await sendMail(normalizedEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
+    // MAIL GÖNDERME DENEMESİ
+    try {
+        await sendMail(normalizedEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`);
+        return res.json({ success: true, message: "Kayıt başarılı, mailini kontrol et!" });
+    } catch (mailErr) {
+        console.error("Mail Gönderim Hatası:", mailErr);
+        // Kullanıcı kaydedildi ama mail gitmediyse haber ver
+        return res.status(500).json({ 
+            success: false, 
+            error: "Kullanıcı oluşturuldu fakat mail gönderilemedi. Lütfen uygulama şifresini kontrol edin." 
+        });
+    }
 
-    res.json({ success: true, message: "Kayıt başarılı, mailini kontrol et!" });
   } catch (err) {
-    console.error("Kayıt Hatası Detayı:", err);
-    res.status(500).json({ error: "Kayıt sırasında bir hata oluştu.", detail: err.message });
+    console.error("Genel Kayıt Hatası:", err);
+    res.status(500).json({ error: "Sistem hatası oluştu." });
   }
 });
 
