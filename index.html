@@ -249,7 +249,7 @@
 
     try {
         btn.disabled = true;
-        btn.innerText = "İşleniyor..."; // Kullanıcıya çalıştığını göster
+        btn.innerText = "Gönderiliyor...";
 
         const res = await fetch('/register', {
             method: 'POST',
@@ -264,11 +264,11 @@
             document.getElementById('register-form').classList.add('hidden');
             document.getElementById('verify-form').classList.remove('hidden');
         } else { 
-            alert("Sunucu Hatası: " + (data.error || "Bilinmeyen bir hata.")); 
+            // Burada "Zaten kayıtlı" gibi hataları görebileceksin
+            alert(data.error || "Bir hata oluştu!"); 
         }
     } catch (err) {
-        console.error("İstek Hatası:", err);
-        alert("Bağlantı kurulamadı! Sunucu kapalı olabilir veya internet kesik.");
+        alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Doğrulama Kodu Gönder";

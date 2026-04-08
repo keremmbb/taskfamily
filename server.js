@@ -100,28 +100,32 @@ app.post('/register', async (req, res) => {
 
   try {
     const userRole = role || 'parent';
+    const cleanEmail = email.toLowerCase().trim();
 
-    // Veritabanı kaydı
+    // ON CONFLICT (email) kısmını is_verified false olanlar için güncellenebilir yapıyoruz
     await db.query(
         `INSERT INTO users (email, password, role, is_verified, verification_code) 
          VALUES ($1, $2, $3, false, $4) 
-         ON CONFLICT (email) DO UPDATE SET 
-         password = EXCLUDED.password, 
-         verification_code = EXCLUDED.verification_code`,
-         [email, password, userRole, verificationCode]
+         ON CONFLICT (email) 
+         DO UPDATE SET 
+            password = EXCLUDED.password, 
+            verification_code = EXCLUDED.verification_code
+         WHERE users.is_verified = false`, // Sadece onaylanmamış hesapları tekrar kayda izin ver
+         [cleanEmail, password, userRole, verificationCode]
     );
 
-    // KRİTİK DEĞİŞİKLİK: Buradaki 'await' kelimesini sildik.
-    // Sunucu mailin gitmesini beklemeden alt satıra geçecek.
-    sendMail(email, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
-        .catch(err => console.error("Arka plan mail hatası:", err));
+    // Maili beklemeden gönderiyoruz (takılmayı önlemek için)
+    sendMail(cleanEmail, "Doğrulama Kodunuz", `Kodunuz: <b>${verificationCode}</b>`)
+        .catch(err => console.error("Mail arka plan hatası:", err));
 
-    // Kullanıcıya anında cevap dönüyoruz
-    res.json({ success: true, message: "Kayıt başarılı, mail gönderiliyor!" });
-    
+    res.json({ success: true, message: "Kayıt/Güncelleme başarılı, maili kontrol et!" });
   } catch (err) {
     console.error("Kayıt Hatası Detayı:", err);
-    res.status(500).json({ error: "Kayıt sırasında bir hata oluştu.", detail: err.message });
+    // Eğer mail zaten onaylıysa ve tekrar kayıt olmaya çalışıyorsa:
+    if (err.code === '23505') {
+        return res.status(400).json({ success: false, error: "Bu e-posta zaten onaylı bir hesaba ait. Giriş yapmayı deneyin." });
+    }
+    res.status(500).json({ success: false, error: "Sunucu hatası oluştu." });
   }
 });
 
