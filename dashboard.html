@@ -66,77 +66,108 @@
 </div>
             <div style="margin-top: 30px; padding: 20px; background: #f0f4ff; border-radius: 12px;">
     <h3>👶 Çocuk Davet Et</h3>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="email" id="invite-email" placeholder="Çocuğun E-posta adresi" style="margin-bottom: 0;">
-        <button onclick="sendInvitation()" class="submit-btn" style="width: auto; margin-top: 0;">Davet Gönder</button>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <input type="text" id="childName" placeholder="Çocuğun Adı" style="padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; gap: 10px;">
+            <input type="email" id="childEmail" placeholder="Çocuğun E-posta adresi" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <button onclick="sendInvitation()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">
+                Davet Gönder
+            </button>
+        </div>
     </div>
 </div>
-        </main>
-    </div>
 
-    <script>
-        async function sendInvitation() {
-    try {
-        const res = await fetch('/invite-child', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                childName: document.getElementById('childName').value,
-                childEmail: document.getElementById('childEmail').value 
-            })
-        });
+<script>
+    async function sendInvitation() {
+        // HTML'deki yeni ID'leri buradan okuyoruz
+        const nameInput = document.getElementById('childName');
+        const emailInput = document.getElementById('childEmail');
 
-        // Yanıt boş mu veya hata mı var kontrol et
-        if (!res.ok) {
-            const errorData = await res.json().catch(() => ({})); 
-            throw new Error(errorData.error || "Sunucu hatası oluştu");
+        const childName = nameInput.value;
+        const childEmail = emailInput.value;
+
+        if (!childName || !childEmail) {
+            alert("Lütfen çocuğun adını ve e-postasını girin!");
+            return;
         }
 
-        const data = await res.json(); // Burada hata alıyordun
-        alert("Harika! Davet başarıyla gitti.");
+        try {
+            const res = await fetch('/invite-child', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    childName: childName,
+                    childEmail: childEmail,
+                    parentId: 1 // Şimdilik manuel 1, normalde giriş yapan ebeveynin ID'si gelmeli
+                })
+            });
+
+            // Yanıtı işle
+            const data = await res.json(); 
+
+            if (res.ok && data.success) {
+                alert("✅ Harika! Davet başarıyla gitti.");
+                nameInput.value = ""; // Kutuları temizle
+                emailInput.value = "";
+            } else {
+                throw new Error(data.error || "Sunucu bir hata döndürdü.");
+            }
+            
+        } catch (err) {
+            console.error("Hata detayı:", err);
+            alert("Davet gönderilemedi: " + err.message);
+        }
+    }
+
+    // --- Diğer fonksiyonların (assignTask, loadSentTasks) aynı kalabilir ---
+    async function assignTask() {
+        const title = document.getElementById('task-title').value;
+        const childEmail = document.getElementById('target-child-email').value;
         
-    } catch (err) {
-        console.error("Hata detayı:", err);
-        alert("Davet gönderilemedi: " + err.message);
-    }
-}
-        async function assignTask() {
-    const title = document.getElementById('task-title').value;
-    const childEmail = document.getElementById('target-child-email').value;
-    
-    const res = await fetch('/add-task-by-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, childEmail })
-    });
-    
-    const data = await res.json();
-    if(data.success) {
-        alert("Görev başarıyla iletildi!");
-        document.getElementById('task-title').value = "";
-    }
-}
-async function loadSentTasks() {
-    const res = await fetch('/get-parent-tasks?parentId=1'); // Şimdilik ID: 1
-    const tasks = await res.json();
-    
-    const container = document.getElementById('parent-tasks-list');
-    container.innerHTML = ""; // İçini temizle
+        if(!title || !childEmail) return alert("Alanları doldurun!");
 
-    tasks.forEach(task => {
-        container.innerHTML += `
-            <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
-                <span><strong>${task.task_title}</strong> (Çocuk ID: ${task.child_id})</span>
-                <span style="color: ${task.status === 'pending' ? 'orange' : 'green'}">
-                    ${task.status === 'pending' ? '⌛ Bekliyor' : '✅ Tamamlandı'}
-                </span>
-            </div>
-        `;
-    });
-}
+        const res = await fetch('/add-task-by-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, childEmail })
+        });
+        
+        const data = await res.json();
+        if(data.success) {
+            alert("Görev başarıyla iletildi!");
+            document.getElementById('task-title').value = "";
+            loadSentTasks(); // Listeyi yenile
+        }
+    }
 
-// Sayfa yüklendiğinde görevleri çek
-window.onload = loadSentTasks;
-    </script>
+    async function loadSentTasks() {
+        try {
+            const res = await fetch('/get-parent-tasks?parentId=1');
+            const tasks = await res.json();
+            
+            const container = document.getElementById('parent-tasks-list');
+            if(!container) return;
+            container.innerHTML = ""; 
+
+            if(tasks.length === 0) {
+                container.innerHTML = '<p style="color: #64748b;">Henüz görev listelenmedi...</p>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                container.innerHTML += `
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${task.task_title}</strong></span>
+                        <span style="padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; background: ${task.status === 'pending' ? '#fff3cd' : '#d1fae5'}; color: ${task.status === 'pending' ? '#856404' : '#065f46'}">
+                            ${task.status === 'pending' ? '⌛ Bekliyor' : '✅ Tamamlandı'}
+                        </span>
+                    </div>
+                `;
+            });
+        } catch (e) { console.error("Görevler yüklenemedi", e); }
+    }
+
+    window.onload = loadSentTasks;
+</script>
 </body>
 </html>
