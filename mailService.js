@@ -3,15 +3,19 @@ require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
-    port: 465, // Portu 465 yap
-    secure: true, // 465 kullanırken bu her zaman true olmalı
+    port: 465, // Kesinlikle 465 olmalı
+    secure: true, // 465 portu için true zorunludur
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // Bağlantı süresini biraz uzatalım (isteğe bağlı)
+    // Render/Bulut sunucuları için bağlantı bekletme ayarları
     connectionTimeout: 10000, 
-    greetingTimeout: 10000
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    tls: {
+        rejectUnauthorized: false // Sertifika hatalarını görmezden gel
+    }
 });
 
 const sendMail = async (to, subject, html) => {
@@ -23,8 +27,9 @@ const sendMail = async (to, subject, html) => {
             html: html
         });
         console.log("✅ Mail başarıyla gönderildi: ", info.messageId);
+        return info;
     } catch (error) {
-        console.error('❌ Mail Hatası Detayı:', error); // Hatayı komple yazdır
+        console.error('❌ SMTP/MAIL HATASI DETAYI:', error);
         throw error;
     }
 };
