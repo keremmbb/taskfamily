@@ -99,35 +99,30 @@ app.post('/invite-child', async (req, res) => {
 });
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
-    // 6 haneli rastgele kod üretimi
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-        // 1. Veritabanı İşlemi: Kullanıcıyı kaydet veya varsa kodunu güncelle
-        console.log(`📝 Veritabanı işlemi başlatıldı: ${email}`);
+        // 1. Önce Veritabanına Yaz (Bu kısmın çalıştığını biliyoruz)
         await db.query(
             "INSERT INTO users (email, password, role, verification_code) VALUES ($1, $2, 'parent', $3) ON CONFLICT (email) DO UPDATE SET verification_code = $3",
             [email, password, code]
         );
-        console.log("✅ Veritabanı kaydı başarılı.");
 
-        // 2. Mail İşlemi: Hata olsa bile sistemi durdurma
-       try {
-            await sendMail(email, "TaskFamily Doğrulama Kodunuz", `Kodunuz: ${code}`);
-            res.json({ success: true, message: "Kod gönderildi" });
-        } catch (mailErr) {
-            console.error("Mail gitmedi:", mailErr.message);
-            // Hata mesajını frontend'e gönder ki ekranda ne olduğunu görelim
-            res.status(500).json({ success: false, error: "Mail hatası: " + mailErr.message });
-        }
+        // 2. Mail Gönderimini Başlat ama Sunucuyu Kilitleme
+        sendMail(email, "TaskFamily Kodunuz", `Kodunuz: ${code}`)
+            .then(() => console.log("Mail başarıyla iletildi."))
+            .catch(err => console.error("Arka planda mail hatası:", err.message));
+
+        // 3. Mail sonucu beklenmeden kullanıcıya yanıt ver (Test için en garantisi budur)
+        return res.json({ 
+            success: true, 
+            message: "İşlem alındı. Eğer mail gelmezse pgAdmin'den kodu kontrol edin.",
+            debug_code: code // Geçici olarak kodu buraya yazdırabilirsin
+        });
 
     } catch (err) {
-        // Eğer veritabanı çökerse buraya düşer
-        console.error("❌ Kritik Kayıt Hatası:", err);
-        return res.status(500).json({ 
-            success: false, 
-            error: "Sistem hatası oluştu. Lütfen tekrar deneyin." 
-        });
+        console.error("Kayıt hatası:", err);
+        return res.status(500).json({ success: false, error: "Sunucu hatası." });
     }
 });
 app.post('/verify-code', async (req, res) => {
