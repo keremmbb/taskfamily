@@ -1,32 +1,26 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 require('dotenv').config();
-
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 2525, // 465 veya 587 yerine bunu dene
-    secure: false, // 2525 portu için false olmalı
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
 
 const sendMail = async (to, subject, html) => {
     try {
-        console.log(`📧 Gönderim denemesi (Port 2525): ${to}`);
-        const info = await transporter.sendMail({
-            from: `"TaskFamily" <${process.env.EMAIL_USER}>`,
-            to: to,
+        console.log(`📧 API üzerinden mail gönderiliyor: ${to}`);
+        
+        const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { name: "TaskFamily", email: process.env.EMAIL_USER },
+            to: [{ email: to }],
             subject: subject,
-            html: html
+            htmlContent: html
+        }, {
+            headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json'
+            }
         });
-        console.log("✅ Mail başarıyla uçtu!");
-        return info;
+
+        console.log("✅ Mail API ile başarıyla gönderildi! ID:", response.data.messageId);
+        return response.data;
     } catch (error) {
-        console.error('❌ SMTP HATASI:', error.message);
+        console.error('❌ BREVO API HATASI:', error.response ? error.response.data : error.message);
         throw error;
     }
 };
