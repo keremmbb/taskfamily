@@ -2,19 +2,10 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465, 
-    secure: true, // 465 portu için true olmalı
+    service: 'hotmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    // Render ve Google arasındaki gecikmeleri aşmak için süreleri artırıyoruz
-    connectionTimeout: 30000, // 30 saniye
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-    tls: {
-        rejectUnauthorized: false
+        user: 'senin-emailin@outlook.com',
+        pass: 'outlook-uygulama-sifresi'
     }
 });
 
