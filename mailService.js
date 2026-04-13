@@ -3,37 +3,33 @@ require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465, // SSL portu (Render'da genellikle 465 daha stabildir)
-    secure: true, 
+    port: 587,
+    secure: false, // 587 için false olmalı
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // Bağlantı kopmalarını önlemek için bekleme sürelerini artırıyoruz
-    connectionTimeout: 20000, // 20 saniye
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
     tls: {
-        rejectUnauthorized: false // Sertifika sorunlarını görmezden gel
-    }
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 15000 // 15 saniye bekle
 });
 
 const sendMail = async (to, subject, html) => {
     try {
-        const mailOptions = {
+        console.log(`📧 Mail denemesi başlatıldı: ${to}`);
+        const info = await transporter.sendMail({
             from: `"TaskFamily" <${process.env.EMAIL_USER}>`,
-            to: to,
-            subject: subject,
-            html: html
-        };
-        
-        console.log(`📧 Mail gönderimi deneniyor: ${to}`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ Mail başarıyla gönderildi: ${info.messageId}`);
+            to,
+            subject,
+            html
+        });
+        console.log("✅ Mail başarıyla iletildi");
         return info;
     } catch (error) {
-        console.error('❌ Mail hatası detayı:', error.message);
-        throw error;
+        console.error('❌ Mail gönderme başarısız:', error.message);
+        // Hata fırlatıyoruz ki server.js bunu yakalayıp 500 hatası vermesin
+        throw new Error("Mail gönderilemedi: " + error.message);
     }
 };
 

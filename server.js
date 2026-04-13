@@ -102,26 +102,31 @@ app.post('/register', async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-        // Kullanıcıyı veritabanına ekle (veya güncelle)
+        // 1. Veritabanı işlemi
         await db.query(
             "INSERT INTO users (email, password, role, verification_code) VALUES ($1, $2, 'parent', $3) ON CONFLICT (email) DO UPDATE SET verification_code = $3",
             [email, password, code]
         );
 
-        // KRİTİK: Mail gönderme işlemini bekle
-        await sendMail(
-            email, 
-            "TaskFamily Doğrulama Kodunuz", 
-            `<h1>Hoş Geldiniz!</h1><p>Doğrulama kodunuz: <b>${code}</b></p>`
-        );
+        // 2. Mail işlemi (Hata olasılığı en yüksek yer)
+        try {
+            await sendMail(
+                email, 
+                "TaskFamily Doğrulama Kodunuz", 
+                `<h1>Hoş Geldiniz!</h1><p>Doğrulama kodunuz: <b>${code}</b></p>`
+            );
+            return res.json({ success: true, message: "Kod gönderildi" });
+        } catch (mailErr) {
+            console.error("Mail aşamasında hata:", mailErr.message);
+            // Mail gitmese de kullanıcıya kodun neden gitmediğini söyleyelim
+            return res.status(500).json({ success: false, error: "Mail sunucusuna bağlanılamadı. Lütfen Gmail uygulama şifrenizi kontrol edin." });
+        }
 
-        res.json({ success: true, message: "Kod gönderildi" });
     } catch (err) {
-        console.error("Kayıt hatası:", err);
-        res.status(500).json({ error: "Kayıt sırasında bir hata oluştu." });
+        console.error("Genel kayıt hatası:", err);
+        return res.status(500).json({ success: false, error: "Veritabanı hatası oluştu." });
     }
 });
-
 app.post('/verify-code', async (req, res) => {
     const { email, code } = req.body;
     try {
