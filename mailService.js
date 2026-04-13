@@ -2,18 +2,13 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // 587 için false olmalı
+    host: 'smtp-relay.brevo.com',
+    port: 465, // 587 yerine 465 dene
+    secure: true, // Port 465 için true olmalı
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false,
-        minVersion: "TLSv1.2"
-    },
-    connectionTimeout: 10000 // 10 saniye (2 dakika bekletmesin)
+    }
 });
 
 const sendMail = async (to, subject, html) => {
