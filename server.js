@@ -112,28 +112,13 @@ app.post('/register', async (req, res) => {
         console.log("✅ Veritabanı kaydı başarılı.");
 
         // 2. Mail İşlemi: Hata olsa bile sistemi durdurma
-        try {
-            console.log(`📧 Mail gönderimi deneniyor: ${email}`);
-            const mailInfo = await sendMail(
-                email, 
-                "TaskFamily Doğrulama Kodunuz", 
-                `<h1>Hoş Geldiniz!</h1><p>Doğrulama kodunuz: <b>${code}</b></p>`
-            );
-            
-            console.log("✅ Mail sunucudan başarıyla çıktı:", mailInfo?.messageId);
-            return res.json({ success: true, message: "Kod gönderildi" });
-
+       try {
+            await sendMail(email, "TaskFamily Doğrulama Kodunuz", `Kodunuz: ${code}`);
+            res.json({ success: true, message: "Kod gönderildi" });
         } catch (mailErr) {
-            // Mail gitmezse buraya düşer ama kullanıcıya "Hata" dönmez
-            console.error("⚠️ Mail Gönderim Hatası (Sistem Devam Ediyor):", mailErr.message);
-            
-            // Test aşamasında olduğun için mail gitmese de "kod gönderildi" diyoruz 
-            // Böylece sen ön yüzde (Frontend) bir sonraki aşamaya geçebilirsin.
-            return res.json({ 
-                success: true, 
-                message: "Kod gönderildi (Simülasyon Modu)", 
-                debug_info: "Mail sunucusu bağlanamadı ama kayıt yapıldı." 
-            });
+            console.error("Mail gitmedi:", mailErr.message);
+            // Hata mesajını frontend'e gönder ki ekranda ne olduğunu görelim
+            res.status(500).json({ success: false, error: "Mail hatası: " + mailErr.message });
         }
 
     } catch (err) {
