@@ -64,33 +64,36 @@ app.post('/add-task', async (req, res) => {
 // Çocuk Davet Etme Endpoint'i
 app.post('/invite-child', async (req, res) => {
     const { childEmail, parentId } = req.body;
-    const temporaryPassword = '123';
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
     
-    // İsim girilmediği için e-postanın @ işaretinden önceki kısmını isim yapalım
-    const defaultName = childEmail.split('@')[0]; 
+    // Basit kontrol
+    if (!childEmail) {
+        return res.status(400).json({ success: false, error: "E-posta adresi eksik!" });
+    }
 
     try {
-        const newUser = await db.query(
+        const temporaryPassword = '123';
+        const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+        const defaultName = childEmail.split('@')[0]; 
+
+        // Veritabanı işlemi
+        const result = await db.query(
             "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-            [defaultName, childEmail, hashedPassword, 'child', true, parentId]
+            [defaultName, childEmail, hashedPassword, 'child', true, parentId || null]
         );
 
-        const inviteLink = `https://taskfamily-app.onrender.com/login`;
-        const htmlContent = `
-            <div style="font-family: sans-serif; padding: 20px;">
-                <h2>Aile Grubuna Davet Edildin! 🚀</h2>
-                <p>TaskFamily'e katılmak için geçici şifren: <b>${temporaryPassword}</b></p>
-                <a href="${inviteLink}">Giriş Yap</a>
-            </div>
-        `;
+        // Mail içeriği
+        const htmlContent = `<h2>TaskFamily'e Hoş Geldin!</h2><p>Şifren: 123</p>`;
 
+        // Mail gönderimi
         await sendMail(childEmail, "Aile Grubu Daveti", htmlContent);
-        res.status(200).json({ success: true, message: "Davet gönderildi!" });
+
+        // KRİTİK: Yanıtın JSON olduğundan ve gönderildiğinden emin ol
+        return res.status(200).json({ success: true, message: "Davet başarıyla gönderildi!" });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: "Hata oluştu." });
+        console.error("Invite Hatası:", err);
+        // Hata durumunda da JSON dön
+        return res.status(500).json({ success: false, error: "Sunucu hatası veya e-posta zaten kayıtlı." });
     }
 });
 app.post('/register', async (req, res) => {

@@ -78,35 +78,46 @@
 <script>
     async function sendInvitation() {
     const emailInput = document.getElementById('childEmail');
-    const childEmail = emailInput.value;
+    if (!emailInput) return;
 
+    const childEmail = emailInput.value;
     if (!childEmail) {
-        alert("Lütfen davet edilecek e-posta adresini girin!");
+        alert("Lütfen bir e-posta adresi girin!");
         return;
     }
 
     try {
-        const res = await fetch('/invite-child', {
+        const response = await fetch('/invite-child', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                childEmail: childEmail,
-                parentId: 1 // Burayı ileride giriş yapan kullanıcının ID'si ile değiştireceğiz
-            })
+            body: JSON.stringify({ childEmail, parentId: 1 })
         });
 
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-            alert("✅ Davet başarıyla gönderildi!");
-            emailInput.value = ""; // Kutuyu temizle
-        } else {
-            throw new Error(data.error || "Sunucu bir hata döndürdü.");
+        // Yanıtın durumuna bak (404, 500 vs.)
+        if (!response.ok) {
+            const errorText = await response.text(); // JSON yerine metin olarak oku (çünkü hata JSON olmayabilir)
+            console.error("Sunucu hatası:", errorText);
+            alert("Sunucu hatası oluştu. Loglara bakın.");
+            return;
         }
-        
+
+        // Yanıt gövdesi boş mu kontrol et
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const data = await response.json();
+            if (data.success) {
+                alert("✅ " + data.message);
+                emailInput.value = "";
+            } else {
+                alert("❌ Hata: " + data.error);
+            }
+        } else {
+            alert("Sunucudan beklenen JSON yanıtı gelmedi.");
+        }
+
     } catch (err) {
-        console.error("Hata detayı:", err);
-        alert("Davet gönderilemedi: " + err.message);
+        console.error("Fetch Hatası:", err);
+        alert("Bağlantı hatası: " + err.message);
     }
 }
 
