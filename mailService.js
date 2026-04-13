@@ -2,11 +2,17 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
-    service: 'hotmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // 587 için mutlaka false olmalı
     auth: {
-        user: 'senin-emailin@outlook.com',
-        pass: 'outlook-uygulama-sifresi'
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 10000 // 10 saniye sonra vazgeç ki sunucu asılı kalmasın
 });
 
 const sendMail = async (to, subject, html) => {
