@@ -63,33 +63,68 @@ app.post('/add-task', async (req, res) => {
 });
 // Çocuk Davet Etme Endpoint'i
 app.post('/invite-child', async (req, res) => {
+    // 1. Verileri al
     const { childName, childEmail, parentId } = req.body;
-    const temporaryPassword = '123'; // Sabit geçici şifre
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+    // Basit bir kontrol: Veriler eksik mi?
+    if (!childName || !childEmail) {
+        return res.status(400).json({ 
+            success: false, 
+            error: "Lütfen isim ve e-posta bilgilerini doldurun." 
+        });
+    }
 
     try {
-        // Çocuğu veritabanına ekle
+        // 2. Şifreyi hazırla (123)
+        const temporaryPassword = '123';
+        const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+        // 3. Çocuğu veritabanına ekle
+        // Not: parent_id sütununun pgAdmin'de eklendiğinden emin ol!
         const newUser = await db.query(
-            "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            [childName, childEmail, hashedPassword, 'child', true, parentId]
+            "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+            [childName, childEmail, hashedPassword, 'child', true, parentId || null]
         );
 
-        // Çocuğa mail gönder
+        // 4. Çocuğa mail içeriğini hazırla
         const inviteLink = `https://taskfamily-app.onrender.com/login`;
         const htmlContent = `
-            <h1>Hoş geldin ${childName}!</h1>
-            <p>Ailen seni TaskFamily'e davet etti.</p>
-            <p>Giriş yapman için geçici şifren: <b>${temporaryPassword}</b></p>
-            <p>Lütfen giriş yaptıktan sonra şifreni değiştirmeyi unutma.</p>
-            <a href="${inviteLink}">Giriş Yapmak İçin Tıkla</a>
+            <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+                <h1 style="color: #6366f1;">Hoş geldin, ${childName}! 🚀</h1>
+                <p>Ailen seni <b>TaskFamily</b>'e davet etti. Artık görevlerini buradan takip edebilirsin.</p>
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0;">Giriş için geçici şifren:</p>
+                    <h2 style="margin: 10px 0; color: #1f2937;">${temporaryPassword}</h2>
+                </div>
+                <p>Lütfen giriş yaptıktan sonra "Hesabını Tanımla" uyarısına tıklayarak şifreni değiştirmeyi unutma.</p>
+                <a href="${inviteLink}" style="display: inline-block; background: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Sisteme Giriş Yap</a>
+            </div>
         `;
 
-        await sendMail(childEmail, "Aile Grubu Daveti", htmlContent);
-        res.status(200).json({ message: "Davet başarıyla gönderildi!" });
+        // 5. Maili gönder
+        await sendMail(childEmail, "Aile Grubu Daveti | TaskFamily", htmlContent);
+
+        // 6. BAŞARILI YANIT (Mutlaka JSON dönüyoruz)
+        return res.status(200).json({ 
+            success: true, 
+            message: "Davet başarıyla gönderildi!" 
+        });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Davet gönderilirken hata oluştu." });
+        console.error("❌ Davet Hatası:", err);
+        
+        // Eğer e-posta zaten varsa veritabanı hata verir, bunu yakalayalım:
+        if (err.code === '23505') {
+            return res.status(400).json({ 
+                success: false, 
+                error: "Bu e-posta adresi zaten kayıtlı!" 
+            });
+        }
+
+        return res.status(500).json({ 
+            success: false, 
+            error: "Sunucu tarafında bir hata oluştu. Lütfen tekrar deneyin." 
+        });
     }
 });
 app.post('/register', async (req, res) => {

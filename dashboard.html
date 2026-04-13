@@ -76,21 +76,30 @@
 
     <script>
         async function sendInvitation() {
-        const email = document.getElementById('invite-email').value;
+    try {
         const res = await fetch('/invite-child', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                childEmail: email, 
-                parentId: 1 // Bu ID dinamik olmalı (Giriş yapan velinin ID'si)
+                childName: document.getElementById('childName').value,
+                childEmail: document.getElementById('childEmail').value 
             })
         });
-        const data = await res.json();
-        if(data.success) alert("Davet başarıyla gönderildi!");
-    }
-        function logout() {
-            window.location.href = "/"; // Ana sayfaya döner
+
+        // Yanıt boş mu veya hata mı var kontrol et
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({})); 
+            throw new Error(errorData.error || "Sunucu hatası oluştu");
         }
+
+        const data = await res.json(); // Burada hata alıyordun
+        alert("Harika! Davet başarıyla gitti.");
+        
+    } catch (err) {
+        console.error("Hata detayı:", err);
+        alert("Davet gönderilemedi: " + err.message);
+    }
+}
         async function assignTask() {
     const title = document.getElementById('task-title').value;
     const childEmail = document.getElementById('target-child-email').value;
