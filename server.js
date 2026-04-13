@@ -61,40 +61,35 @@ app.post('/add-task', async (req, res) => {
         res.status(500).json({ error: "Görev atanamadı." });
     }
 });
+// Çocuk Davet Etme Endpoint'i
 app.post('/invite-child', async (req, res) => {
-    const { childEmail, parentId } = req.body; 
-    
-    if (!parentId) {
-        return res.status(400).json({ error: "Ebeveyn ID bilgisi eksik!" });
-    }
+    const { childName, childEmail, parentId } = req.body;
+    const temporaryPassword = '123'; // Sabit geçici şifre
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-    const tempPass = "123456"; 
-    
     try {
-        // 1. Önce Veritabanına Kaydet (Hata varsa catch'e düşer)
-        await db.query(
-            `INSERT INTO users (email, password, role, is_verified, parent_id) 
-             VALUES ($1, $2, 'child', true, $3) 
-             ON CONFLICT (email) DO UPDATE SET parent_id = EXCLUDED.parent_id`,
-            [childEmail, tempPass, parentId]
+        // Çocuğu veritabanına ekle
+        const newUser = await db.query(
+            "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            [childName, childEmail, hashedPassword, 'child', true, parentId]
         );
 
-        // 2. Mail Göndermeyi Dene (Ama sonucu bekleme!)
-        // .catch ekleyerek mail hatası olsa bile sunucunun çökmesini engelliyoruz.
-        const inviteLink = `https://taskfamily-app.onrender.com/child-tasks.html?email=${childEmail}`;
-        const mailBody = `<h3>Merhaba!</h3> Davet edildin. Link: ${inviteLink}`;
+        // Çocuğa mail gönder
+        const inviteLink = `https://taskfamily-app.onrender.com/login`;
+        const htmlContent = `
+            <h1>Hoş geldin ${childName}!</h1>
+            <p>Ailen seni TaskFamily'e davet etti.</p>
+            <p>Giriş yapman için geçici şifren: <b>${temporaryPassword}</b></p>
+            <p>Lütfen giriş yaptıktan sonra şifreni değiştirmeyi unutma.</p>
+            <a href="${inviteLink}">Giriş Yapmak İçin Tıkla</a>
+        `;
 
-        sendMail(childEmail, "Görev Sistemi Daveti", mailBody)
-            .then(() => console.log("✅ Mail başarıyla gönderildi."))
-            .catch(err => console.error("❌ Mail Gönderim Hatası (Ama kayıt yapıldı):", err.message));
-
-        // 3. Kullanıcıya HEMEN cevap ver
-        // Mailin gidip gitmemesi bu cevabı engellemez.
-        return res.json({ success: true, message: "İşlem başarılı! (Mail arka planda gönderiliyor)" });
+        await sendMail(childEmail, "Aile Grubu Daveti", htmlContent);
+        res.status(200).json({ message: "Davet başarıyla gönderildi!" });
 
     } catch (err) {
-        console.error("❌ Veritabanı Hatası:", err.message);
-        return res.status(500).json({ error: "Veritabanı hatası oluştu. Lütfen tekrar deneyin." });
+        console.error(err);
+        res.status(500).json({ error: "Davet gönderilirken hata oluştu." });
     }
 });
 app.post('/register', async (req, res) => {

@@ -2,76 +2,248 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Görevlerim | TaskFamily</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 50px; }
-        .task-card { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; }
-        .done-btn { background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #f0f2f5;
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        /* Ünlem/Uyarı Alanı */
+        #setup-alert {
+            display: none;
+            background: #fff3cd;
+            border-left: 6px solid #ffc107;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            animation: slideIn 0.5s ease;
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-btn {
+            background: #ffc107;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .alert-btn:hover { transform: scale(1.05); }
+
+        /* Görev Kartları */
+        .task-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: 1px solid #edf2f7;
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .task-icon {
+            font-size: 1.5rem;
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .done-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .done-btn.completed {
+            background: var(--success);
+            cursor: default;
+        }
+
+        .done-btn:not(.completed):hover {
+            background: #4f46e5;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Boş durum mesajı */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
     </style>
 </head>
 <body>
-    <h1>📋 Merhaba! İşte Görevlerin:</h1>
-    <div id="tasks-container">
-        <div class="task-card">
-            <span>Odani Topla</span>
-            <button class="done-btn">Tamamladım!</button>
+
+<div class="dashboard-container">
+    <header>
+        <h1>🚀 Merhaba Kahraman!</h1>
+        <p class="subtitle">Bugün hangi görevleri tamamlayacaksın?</p>
+    </header>
+
+    <div id="setup-alert">
+        <div class="alert-content">
+            <span>⚠️ <strong>Hesabını Tanımla:</strong> Lütfen kendi şifreni oluştur.</span>
+            <button class="alert-btn" onclick="updatePassword()">Şifre Belirle</button>
         </div>
     </div>
-    <script>
+
+    <div id="tasks-container">
+        <div class="empty-state">Görevlerin yükleniyor...</div>
+    </div>
+</div>
+
+<script>
     const urlParams = new URLSearchParams(window.location.search);
     const childEmail = urlParams.get('email');
 
     async function loadMyTasks() {
-        if (!childEmail) return;
-
-        // Sunucudan sadece bu çocuğa ait görevleri iste
-        const res = await fetch(`/get-child-tasks?email=${childEmail}`);
-        const tasks = await res.json();
-
-        const container = document.getElementById('tasks-container');
-        container.innerHTML = "";
-
-        if(tasks.length === 0) {
-            container.innerHTML = "<p>Henüz atanmış bir görevin yok. Keyfine bak! 😊</p>";
+        if (!childEmail) {
+            document.body.innerHTML = "<div class='dashboard-container'><h1>Hata: Giriş bilgisi eksik!</h1></div>";
+            return;
         }
 
-        tasks.forEach(task => {
-            container.innerHTML += `
-                <div class="task-card">
-                    <span>${task.task_title}</span>
-                    <button class="done-btn" onclick="markAsDone(${task.id})">
-                        ${task.status === 'completed' ? '✅ Tamamlandı' : 'Tamamladım!'}
-                    </button>
-                </div>
-            `;
-        });
+        try {
+            const res = await fetch(`/get-child-tasks?email=${childEmail}`);
+            if (!res.ok) throw new Error("Veriler alınamadı");
+            
+            const tasks = await res.json();
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = "";
+
+            // İlk giriş kontrolü (Backend'den is_first_login gelmeli)
+            // Örnek: if (tasks.length > 0 && tasks[0].is_first_login) 
+            // Şimdilik ünlemi test etmek için manuel açabilirsin:
+            // document.getElementById('setup-alert').style.display = 'block';
+
+            if(tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 50px;">🎉</div>
+                        <p>Tüm görevler bitti veya henüz atanmadı.<br>Keyfine bak kahraman!</p>
+                    </div>`;
+                return;
+            }
+
+            tasks.forEach(task => {
+                const isDone = task.status === 'completed';
+                container.innerHTML += `
+                    <div class="task-card">
+                        <div class="task-info">
+                            <div class="task-icon">${isDone ? '🌟' : '🎯'}</div>
+                            <div class="task-title">${task.task_title}</div>
+                        </div>
+                        <button class="${isDone ? 'done-btn completed' : 'done-btn'}" 
+                                onclick="${isDone ? '' : `markAsDone(${task.id})`}">
+                            ${isDone ? '✅ Bitti!' : 'Tamamladım'}
+                        </button>
+                    </div>
+                `;
+            });
+        } catch (err) {
+            console.error("Yükleme hatası:", err);
+            document.getElementById('tasks-container').innerHTML = "<p>Görevler yüklenirken bir sorun oluştu.</p>";
+        }
     }
 
     async function markAsDone(taskId) {
+        // Butona tıklandığında hafif bir geri bildirim efekti
+        event.target.innerText = "Bekle...";
         const res = await fetch('/complete-task', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ taskId })
         });
-        if(res.ok) loadMyTasks(); // Listeyi yenile
-    }
-    async function loadMyTasks() {
-    if (!childEmail) {
-        document.body.innerHTML = "<h1>Hata: E-posta adresi bulunamadı!</h1>";
-        return;
+        if(res.ok) loadMyTasks();
     }
 
-    try {
-        const res = await fetch(`/get-child-tasks?email=${childEmail}`);
-        if (!res.ok) throw new Error("Veriler alınamadı");
-        
-        const tasks = await res.json();
-        // ... mevcut kodun devamı ...
-    } catch (err) {
-        console.error("Yükleme hatası:", err);
-        document.getElementById('tasks-container').innerHTML = "<p>Görevler yüklenirken bir sorun oluştu.</p>";
+    async function updatePassword() {
+        const newPass = prompt("Kendine yeni ve güçlü bir şifre belirle:");
+        if (newPass && newPass.length >= 4) {
+            // Buraya backend şifre güncelleme fetch kodunu ekleyeceksin
+            alert("Şifren başarıyla güncellendi! (Backend bağlantısı yapılacak)");
+            document.getElementById('setup-alert').style.display = 'none';
+        } else {
+            alert("Lütfen geçerli bir şifre gir (en az 4 karakter).");
+        }
     }
-}
 
     window.onload = loadMyTasks;
 </script>
