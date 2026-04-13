@@ -99,27 +99,50 @@ app.post('/invite-child', async (req, res) => {
 });
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
+    // 6 haneli rastgele kod üretimi
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-        // 1. Veritabanı işlemi
+        // 1. Veritabanı İşlemi: Kullanıcıyı kaydet veya varsa kodunu güncelle
+        console.log(`📝 Veritabanı işlemi başlatıldı: ${email}`);
         await db.query(
             "INSERT INTO users (email, password, role, verification_code) VALUES ($1, $2, 'parent', $3) ON CONFLICT (email) DO UPDATE SET verification_code = $3",
             [email, password, code]
         );
+        console.log("✅ Veritabanı kaydı başarılı.");
 
-        // 2. Mail işlemi (Hata olasılığı en yüksek yer)
+        // 2. Mail İşlemi: Hata olsa bile sistemi durdurma
         try {
-              await sendMail(email, "Konu", "Mesaj");
-              res.json({ success: true, message: "Kod gönderildi" });
-       }      catch (mailErr) {
-              console.log("Mail gitmedi ama işleme devam ediliyor...");
-              res.json({ success: true, message: "Kod gönderildi (Simüle edildi)" });
-    }
+            console.log(`📧 Mail gönderimi deneniyor: ${email}`);
+            const mailInfo = await sendMail(
+                email, 
+                "TaskFamily Doğrulama Kodunuz", 
+                `<h1>Hoş Geldiniz!</h1><p>Doğrulama kodunuz: <b>${code}</b></p>`
+            );
+            
+            console.log("✅ Mail sunucudan başarıyla çıktı:", mailInfo?.messageId);
+            return res.json({ success: true, message: "Kod gönderildi" });
+
+        } catch (mailErr) {
+            // Mail gitmezse buraya düşer ama kullanıcıya "Hata" dönmez
+            console.error("⚠️ Mail Gönderim Hatası (Sistem Devam Ediyor):", mailErr.message);
+            
+            // Test aşamasında olduğun için mail gitmese de "kod gönderildi" diyoruz 
+            // Böylece sen ön yüzde (Frontend) bir sonraki aşamaya geçebilirsin.
+            return res.json({ 
+                success: true, 
+                message: "Kod gönderildi (Simülasyon Modu)", 
+                debug_info: "Mail sunucusu bağlanamadı ama kayıt yapıldı." 
+            });
+        }
 
     } catch (err) {
-        console.error("Genel kayıt hatası:", err);
-        return res.status(500).json({ success: false, error: "Veritabanı hatası oluştu." });
+        // Eğer veritabanı çökerse buraya düşer
+        console.error("❌ Kritik Kayıt Hatası:", err);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Sistem hatası oluştu. Lütfen tekrar deneyin." 
+        });
     }
 });
 app.post('/verify-code', async (req, res) => {
