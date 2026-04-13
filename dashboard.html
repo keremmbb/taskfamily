@@ -66,58 +66,49 @@
 </div>
             <div style="margin-top: 30px; padding: 20px; background: #f0f4ff; border-radius: 12px;">
     <h3>👶 Çocuk Davet Et</h3>
-    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-        <input type="text" id="childName" placeholder="Çocuğun Adı" style="padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <div style="display: flex; gap: 10px;">
-            <input type="email" id="childEmail" placeholder="Çocuğun E-posta adresi" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <button onclick="sendInvitation()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">
-                Davet Gönder
-            </button>
-        </div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="email" id="childEmail" placeholder="Çocuğun E-posta adresi" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <button onclick="sendInvitation()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">
+            Davet Gönder
+        </button>
     </div>
+</div>
 </div>
 
 <script>
     async function sendInvitation() {
-        // HTML'deki yeni ID'leri buradan okuyoruz
-        const nameInput = document.getElementById('childName');
-        const emailInput = document.getElementById('childEmail');
+    const emailInput = document.getElementById('childEmail');
+    const childEmail = emailInput.value;
 
-        const childName = nameInput.value;
-        const childEmail = emailInput.value;
-
-        if (!childName || !childEmail) {
-            alert("Lütfen çocuğun adını ve e-postasını girin!");
-            return;
-        }
-
-        try {
-            const res = await fetch('/invite-child', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    childName: childName,
-                    childEmail: childEmail,
-                    parentId: 1 // Şimdilik manuel 1, normalde giriş yapan ebeveynin ID'si gelmeli
-                })
-            });
-
-            // Yanıtı işle
-            const data = await res.json(); 
-
-            if (res.ok && data.success) {
-                alert("✅ Harika! Davet başarıyla gitti.");
-                nameInput.value = ""; // Kutuları temizle
-                emailInput.value = "";
-            } else {
-                throw new Error(data.error || "Sunucu bir hata döndürdü.");
-            }
-            
-        } catch (err) {
-            console.error("Hata detayı:", err);
-            alert("Davet gönderilemedi: " + err.message);
-        }
+    if (!childEmail) {
+        alert("Lütfen davet edilecek e-posta adresini girin!");
+        return;
     }
+
+    try {
+        const res = await fetch('/invite-child', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                childEmail: childEmail,
+                parentId: 1 // Burayı ileride giriş yapan kullanıcının ID'si ile değiştireceğiz
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            alert("✅ Davet başarıyla gönderildi!");
+            emailInput.value = ""; // Kutuyu temizle
+        } else {
+            throw new Error(data.error || "Sunucu bir hata döndürdü.");
+        }
+        
+    } catch (err) {
+        console.error("Hata detayı:", err);
+        alert("Davet gönderilemedi: " + err.message);
+    }
+}
 
     // --- Diğer fonksiyonların (assignTask, loadSentTasks) aynı kalabilir ---
     async function assignTask() {
