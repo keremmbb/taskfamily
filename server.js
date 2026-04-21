@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // Dosya yolları için gerekli
+const path = require('path');
 const db = require('./db');
 const sendMail = require('./mailService');
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(cors());
