@@ -81,9 +81,28 @@ app.post('/invite-child', async (req, res) => {
             "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
             [defaultName, childEmail, hashedPassword, 'child', true, parentId || null]
         );
+        
+        const inviteLink = "https://taskfamily-app.onrender.com";
 
         // Mail içeriği
-        const htmlContent = `<h2>TaskFamily'e Hoş Geldin!</h2><p>Şifren: 123</p>`;
+        const htmlContent = `
+          <div style="font-family: sans-serif; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; max-width: 500px;">
+          <h2 style="color: #4f46e5;">TaskFamily'e Hoş Geldin! 👋</h2>
+          <p>Ailen seni görev takip sistemine davet etti.</p>
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <p style="margin: 0; color: #64748b;">Geçici Giriş Şifren:</p>
+          <h3 style="margin: 5px 0; color: #1e293b;">123</h3>
+           </div>
+           <p>Aşağıdaki butona tıklayarak sisteme giriş yapabilir ve görevlerini görebilirsin:</p>
+        <a href="${inviteLink}" 
+           style="display: inline-block; background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+           Sisteme Giriş Yap
+        </a>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">
+            Giriş yaptıktan sonra şifreni değiştirmeyi unutma!
+        </p>
+    </div>
+`;
 
         // Mail gönderimi
         await sendMail(childEmail, "Aile Grubu Daveti", htmlContent);
