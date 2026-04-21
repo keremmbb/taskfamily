@@ -81,8 +81,17 @@
     if (!emailInput) return;
 
     const childEmail = emailInput.value;
+    // LocalStorage'dan giriş yapan kullanıcının ID'sini alıyoruz
+    const parentId = localStorage.getItem('userId'); 
+
     if (!childEmail) {
         alert("Lütfen bir e-posta adresi girin!");
+        return;
+    }
+
+    if (!parentId) {
+        alert("Oturum bilgileriniz bulunamadı. Lütfen tekrar giriş yapın.");
+        window.location.href = "/index.html";
         return;
     }
 
@@ -90,34 +99,34 @@
         const response = await fetch('/invite-child', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ childEmail, parentId: 1 })
+            body: JSON.stringify({ 
+                childEmail: childEmail, 
+                parentId: parentId // Sabit 1 yerine gerçek ID'yi gönderiyoruz
+            })
         });
 
-        // Yanıtın durumuna bak (404, 500 vs.)
-        if (!response.ok) {
-            const errorText = await response.text(); // JSON yerine metin olarak oku (çünkü hata JSON olmayabilir)
-            console.error("Sunucu hatası:", errorText);
-            alert("Sunucu hatası oluştu. Loglara bakın.");
-            return;
-        }
-
-        // Yanıt gövdesi boş mu kontrol et
         const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
+        
+        if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
-            if (data.success) {
+            
+            if (response.ok && data.success) {
                 alert("✅ " + data.message);
                 emailInput.value = "";
+                // Çocuk eklendikten sonra listeyi otomatik yenilemek için:
+                if (typeof loadMyChildren === "function") loadMyChildren();
             } else {
-                alert("❌ Hata: " + data.error);
+                alert("❌ Hata: " + (data.error || "Bir sorun oluştu."));
             }
         } else {
-            alert("Sunucudan beklenen JSON yanıtı gelmedi.");
+            const errorText = await response.text();
+            console.error("Sunucu Yanıtı:", errorText);
+            alert("Sunucudan beklenen yanıt gelmedi.");
         }
 
     } catch (err) {
         console.error("Fetch Hatası:", err);
-        alert("Bağlantı hatası: " + err.message);
+        alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
     }
 }
 
@@ -168,6 +177,29 @@
             });
         } catch (e) { console.error("Görevler yüklenemedi", e); }
     }
+    async function loadMyChildren() {
+    const parentId = localStorage.getItem('userId');
+    const response = await fetch(`/get-my-children?parentId=${parentId}`);
+    const children = await response.json();
+
+    const listDiv = document.getElementById('childrenList');
+    listDiv.innerHTML = ""; // İçini temizle
+
+    children.forEach(child => {
+        listDiv.innerHTML += `
+            <div class="child-card" style="border: 1px solid #ddd; padding: 10px; margin: 5px; border-radius: 8px;">
+                <strong>${child.username}</strong> (${child.email})
+                <button onclick="openTaskModal('${child.id}')" style="margin-left: 10px;">Görev Ata</button>
+            </div>
+        `;
+    });
+}
+
+// Sayfa açıldığında fonksiyonu çalıştır
+window.onload = () => {
+    loadMyChildren();
+    // Varsa diğer yükleme fonksiyonların...
+};
 
     window.onload = loadSentTasks;
 </script>

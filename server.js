@@ -54,6 +54,19 @@ app.get('/child-tasks.html', (req, res) => {
 app.get('/child-register.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'child-register.html'));
 });
+app.get('/get-my-children', async (req, res) => {
+    const { parentId } = req.query;
+    try {
+        const result = await db.query(
+            "SELECT id, username, email FROM users WHERE parent_id = $1 AND role = 'child'", 
+            [parentId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Çocuklar listelenemedi." });
+    }
+});
 
 // --- API ENDPOINTLERİ ---
 app.post('/add-task', async (req, res) => {
