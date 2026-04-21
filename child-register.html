@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Çocuk Kayıt | TaskFamily</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+        .register-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 350px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+        input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
+        button { width: 100%; padding: 10px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="register-card">
+    <h2>Hesabını Tamamla 🚀</h2>
+    <p>E-posta adresin doğrulandı.</p>
+    
+    <label>E-posta Adresin</label>
+    <input type="email" id="email-input" readonly>
+    
+    <label>Geçici Şifren (Maildeki)</label>
+    <input type="password" id="temp-password" placeholder="Sana gönderilen 123 şifresini gir">
+    
+    <button onclick="completeRegistration()">Kayıt Ol</button>
+</div>
+
+<script>
+    // 1. URL'den e-posta parametresini al
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailFromUrl = urlParams.get('email');
+
+    // 2. E-posta kutusuna yerleştir
+    if (emailFromUrl) {
+        document.getElementById('email-input').value = emailFromUrl;
+    }
+
+    async function completeRegistration() {
+        const email = document.getElementById('email-input').value;
+        const password = document.getElementById('temp-password').value;
+
+        if (password !== "123") {
+            alert("Lütfen size gönderilen doğru geçici şifreyi girin!");
+            return;
+        }
+
+        // Burada login sayfasına yönlendirebilirsin veya 
+        // şifreyi güncelleyeceği bir API'ye istek atabilirsin.
+        alert("Kayıt başarılı! Şimdi giriş yapabilirsin.");
+        window.location.href = "/index.html"; 
+    }
+</script>
+
+</body>
+</html>

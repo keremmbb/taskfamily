@@ -51,6 +51,9 @@ app.get('/get-child-tasks', async (req, res) => {
 app.get('/child-tasks.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'child-tasks.html'));
 });
+app.get('/child-register.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'child-register.html'));
+});
 
 // --- API ENDPOINTLERİ ---
 app.post('/add-task', async (req, res) => {
@@ -81,8 +84,8 @@ app.post('/invite-child', async (req, res) => {
             "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
             [defaultName, childEmail, hashedPassword, 'child', true, parentId || null]
         );
-        
-        const inviteLink = "https://taskfamily-app.onrender.com";
+
+        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(childEmail)}`;
 
         // Mail içeriği
         const htmlContent = `
