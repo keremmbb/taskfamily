@@ -92,9 +92,11 @@ app.post('/invite-child', async (req, res) => {
         return res.status(200).json({ success: true, message: "Davet başarıyla gönderildi!" });
 
     } catch (err) {
-        console.error("Invite Hatası:", err);
-        // Hata durumunda da JSON dön
-        return res.status(500).json({ success: false, error: "Sunucu hatası veya e-posta zaten kayıtlı." });
+        console.error("Invite Hatası Detayı:", err);
+        return res.status(500).json({ 
+            success: false, 
+            error: err.detail || err.message || "Bilinmeyen hata" 
+        });
     }
 });
 app.post('/register', async (req, res) => {
