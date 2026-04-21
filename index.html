@@ -152,26 +152,44 @@
     }
 
     async function handleLogin() {
-        const email = document.getElementById('log-email').value;
-        const password = document.getElementById('log-pass').value;
+    const email = document.getElementById('log-email').value;
+    const password = document.getElementById('log-pass').value;
 
-        try {
-            const res = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-
-            if(data.success) {
-                window.location.href = data.role === 'child' ? `/child-login?email=${email}` : "/dashboard.html";
-            } else { 
-                alert(data.message || "E-posta veya şifre hatalı!"); 
-            }
-        } catch (error) {
-            alert("Giriş hatası!");
-        }
+    if (!email || !password) {
+        alert("Lütfen tüm alanları doldurun.");
+        return;
     }
+
+    try {
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (data.success) { 
+            // Verileri kaydet
+            localStorage.setItem('userId', data.userId); 
+            localStorage.setItem('userRole', data.role);
+            localStorage.setItem('userEmail', data.email);
+
+            alert("Giriş başarılı! Yönlendiriliyorsunuz...");
+            
+            // KRİTİK: Yönlendirme satırı eklendi
+            if (data.role === 'parent') {
+                window.location.href = '/dashboard.html';
+            } else {
+                window.location.href = '/child-tasks.html';
+            }
+        } else { 
+            alert(data.message || "E-posta veya şifre hatalı!"); 
+        }
+    } catch (error) {
+        console.error("Login hatası:", error);
+        alert("Giriş yapılırken bir hata oluştu.");
+    }
+}
 
     window.onclick = function(event) {
         const modal = document.getElementById('authModal');

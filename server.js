@@ -63,7 +63,7 @@ app.get('/get-my-children', async (req, res) => {
         );
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error("Çocuk listeleme hatası:", err);
         res.status(500).json({ error: "Çocuklar listelenemedi." });
     }
 });
@@ -82,9 +82,8 @@ app.post('/add-task', async (req, res) => {
 app.post('/invite-child', async (req, res) => {
     const { childEmail, parentId } = req.body;
     
-    // Basit kontrol
-    if (!childEmail) {
-        return res.status(400).json({ success: false, error: "E-posta adresi eksik!" });
+    if (!childEmail || !parentId) {
+        return res.status(400).json({ success: false, error: "Bilgiler eksik!" });
     }
 
     try {
@@ -92,74 +91,46 @@ app.post('/invite-child', async (req, res) => {
         const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
         const defaultName = childEmail.split('@')[0]; 
 
-        // Veritabanı işlemi
-        const result = await db.query(
-            "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-            [defaultName, childEmail, hashedPassword, 'child', true, parentId || null]
+        // Veritabanına ekle
+        await db.query(
+            "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6)",
+            [defaultName, childEmail, hashedPassword, 'child', true, parentId]
         );
 
         const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(childEmail)}`;
 
-        // Mail içeriği
         const htmlContent = `
-          <div style="font-family: sans-serif; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; max-width: 500px;">
-          <h2 style="color: #4f46e5;">TaskFamily'e Hoş Geldin! 👋</h2>
-          <p>Ailen seni görev takip sistemine davet etti.</p>
-          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-          <p style="margin: 0; color: #64748b;">Geçici Giriş Şifren:</p>
-          <h3 style="margin: 5px 0; color: #1e293b;">123</h3>
-           </div>
-           <p>Aşağıdaki butona tıklayarak sisteme giriş yapabilir ve görevlerini görebilirsin:</p>
-        <a href="${inviteLink}" 
-           style="display: inline-block; background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-           Sisteme Giriş Yap
-        </a>
-        <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">
-            Giriş yaptıktan sonra şifreni değiştirmeyi unutma!
-        </p>
-    </div>
-`;
+            <div style="font-family: sans-serif; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; max-width: 500px;">
+                <h2 style="color: #4f46e5;">TaskFamily'e Hoş Geldin! 👋</h2>
+                <p>Ailen seni görev takip sistemine davet etti.</p>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p style="margin: 0; color: #64748b;">Geçici Giriş Şifren:</p>
+                    <h3 style="margin: 5px 0; color: #1e293b;">123</h3>
+                </div>
+                <p>Aşağıdaki butona tıklayarak kaydını tamamla:</p>
+                <a href="${inviteLink}" style="display: inline-block; background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Sisteme Kaydol</a>
+            </div>`;
 
-        // Mail gönderimi
         await sendMail(childEmail, "Aile Grubu Daveti", htmlContent);
-
-        // KRİTİK: Yanıtın JSON olduğundan ve gönderildiğinden emin ol
         return res.status(200).json({ success: true, message: "Davet başarıyla gönderildi!" });
 
     } catch (err) {
-        console.error("Invite Hatası Detayı:", err);
-        return res.status(500).json({ 
-            success: false, 
-            error: err.detail || err.message || "Bilinmeyen hata" 
-        });
+        console.error("Invite Hatası:", err);
+        return res.status(500).json({ success: false, error: err.detail || "E-posta zaten kayıtlı olabilir." });
     }
 });
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-
     try {
-        // 1. Önce Veritabanına Yaz (Bu kısmın çalıştığını biliyoruz)
         await db.query(
             "INSERT INTO users (email, password, role, verification_code) VALUES ($1, $2, 'parent', $3) ON CONFLICT (email) DO UPDATE SET verification_code = $3",
             [email, password, code]
         );
-
-        // 2. Mail Gönderimini Başlat ama Sunucuyu Kilitleme
-        sendMail(email, "TaskFamily Kodunuz", `Kodunuz: ${code}`)
-            .then(() => console.log("Mail başarıyla iletildi."))
-            .catch(err => console.error("Arka planda mail hatası:", err.message));
-
-        // 3. Mail sonucu beklenmeden kullanıcıya yanıt ver (Test için en garantisi budur)
-        return res.json({ 
-            success: true, 
-            message: "İşlem alındı. Eğer mail gelmezse pgAdmin'den kodu kontrol edin.",
-            debug_code: code // Geçici olarak kodu buraya yazdırabilirsin
-        });
-
+        sendMail(email, "TaskFamily Kodunuz", `Kodunuz: ${code}`).catch(e => console.log("Mail hatası:", e.message));
+        res.json({ success: true, message: "Kod gönderildi." });
     } catch (err) {
-        console.error("Kayıt hatası:", err);
-        return res.status(500).json({ success: false, error: "Sunucu hatası." });
+        res.status(500).json({ success: false, error: "Sunucu hatası." });
     }
 });
 app.post('/verify-code', async (req, res) => {
@@ -172,44 +143,25 @@ app.post('/verify-code', async (req, res) => {
         } else {
             res.status(400).json({ success: false, message: "Kod hatalı!" });
         }
-    } catch (err) {
-        res.status(500).json({ error: "Sistem hatası" });
-    }
+    } catch (err) { res.status(500).json({ error: "Sistem hatası" }); }
 });
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
-
     try {
         const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
         const user = result.rows[0];
-
         if (user) {
-            // ŞİFRE KONTROLÜ: Bcrypt kullanıyorsan compare kullanmalısın
             const isMatch = await bcrypt.compare(password, user.password);
-            
-            // Eğer bcrypt kullanmadıysan (test aşamasında) veya eşleşirse:
             if (isMatch || user.password === password) {
                 if (user.role === 'parent' && !user.is_verified) {
                     return res.status(401).json({ success: false, message: "Lütfen e-postanızı onaylayın!" });
                 }
-                
-                return res.json({ 
-                    success: true, 
-                    userId: user.id, 
-                    role: user.role, 
-                    email: user.email 
-                });
+                return res.json({ success: true, userId: user.id, role: user.role, email: user.email });
             }
         }
-        
-        // Buraya düşerse ya kullanıcı yok ya şifre yanlış
-        res.status(401).json({ success: false, message: "Hatalı giriş! Şifrenizi kontrol edin." });
-
-    } catch (error) {
-        console.error("Login Hatası:", error);
-        res.status(500).json({ error: "Sunucu hatası" });
-    }
+        res.status(401).json({ success: false, message: "Hatalı giriş!" });
+    } catch (error) { res.status(500).json({ error: "Sunucu hatası" }); }
 });
 app.post('/add-task-by-email', async (req, res) => {
     const { title, childEmail } = req.body;
