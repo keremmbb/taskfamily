@@ -171,23 +171,30 @@ app.post("/login", async (req, res) => {
         const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
         const user = result.rows[0];
 
-        if (user && user.password === password) {
-            // Onay mekanizması sadece veliler için olsun, çocukları direkt alalım
-            if (user.role === 'parent' && !user.is_verified) {
-                return res.status(401).json({ success: false, message: "Lütfen e-postanızı onaylayın!" });
-            }
+        if (user) {
+            // ŞİFRE KONTROLÜ: Bcrypt kullanıyorsan compare kullanmalısın
+            const isMatch = await bcrypt.compare(password, user.password);
             
-            // Başarılı girişte rol bilgisini de gönderiyoruz
-            res.json({ 
-                success: true, 
-                userId: user.id, 
-                role: user.role, // 'parent' veya 'child' döner
-                email: user.email 
-            });
-        } else {
-            res.status(401).json({ success: false, message: "Hatalı giriş!" });
+            // Eğer bcrypt kullanmadıysan (test aşamasında) veya eşleşirse:
+            if (isMatch || user.password === password) {
+                if (user.role === 'parent' && !user.is_verified) {
+                    return res.status(401).json({ success: false, message: "Lütfen e-postanızı onaylayın!" });
+                }
+                
+                return res.json({ 
+                    success: true, 
+                    userId: user.id, 
+                    role: user.role, 
+                    email: user.email 
+                });
+            }
         }
+        
+        // Buraya düşerse ya kullanıcı yok ya şifre yanlış
+        res.status(401).json({ success: false, message: "Hatalı giriş! Şifrenizi kontrol edin." });
+
     } catch (error) {
+        console.error("Login Hatası:", error);
         res.status(500).json({ error: "Sunucu hatası" });
     }
 });
