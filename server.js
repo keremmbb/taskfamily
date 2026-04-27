@@ -95,43 +95,37 @@ app.post('/add-task', async (req, res) => {
 });
 // Çocuk Davet Etme Endpoint'i
 app.post('/invite-child', async (req, res) => {
-    const { childEmail, parentId } = req.body;
-    
-    if (!childEmail || !parentId) {
-        return res.status(400).json({ success: false, error: "Bilgiler eksik!" });
-    }
+    const { email, parentId } = req.body;
 
     try {
-        const temporaryPassword = '123';
-        const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
-        const defaultName = childEmail.split('@')[0]; 
+        // 1. ÖNCE KONTROL ET: Bu e-posta zaten kayıtlı mı?
+        const checkUser = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+        
+        if (checkUser.rows.length > 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Bu e-posta adresi zaten sisteme kayıtlı! Lütfen önce pgAdmin'den veya panelden silin." 
+            });
+        }
 
-        // Veritabanına ekle
-        await db.query(
-            "INSERT INTO users (username, email, password, role, is_first_login, parent_id) VALUES ($1, $2, $3, $4, $5, $6)",
-            [defaultName, childEmail, hashedPassword, 'child', true, parentId]
+        // 2. KAYIT EKLE: Eğer yoksa devam et
+        const result = await db.query(
+            "INSERT INTO users (email, role, parent_id, password) VALUES ($1, 'child', $2, '123') RETURNING id",
+            [email, parentId]
         );
 
-        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(childEmail)}`;
+        // 3. MAİL GÖNDER
+        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(email)}`;
+        await sendMail(
+            email,
+            "Görev Sistemine Davet Edildin!",
+            `<h3>Hoş geldin!</h3><p>Ebeveynin seni görev sistemine davet etti.</p><p>Şifren: 123</p><a href="${inviteLink}">Buraya tıklayarak hesabını tamamla</a>`
+        );
 
-        const htmlContent = `
-            <div style="font-family: sans-serif; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; max-width: 500px;">
-                <h2 style="color: #4f46e5;">TaskFamily'e Hoş Geldin! 👋</h2>
-                <p>Ailen seni görev takip sistemine davet etti.</p>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <p style="margin: 0; color: #64748b;">Geçici Giriş Şifren:</p>
-                    <h3 style="margin: 5px 0; color: #1e293b;">123</h3>
-                </div>
-                <p>Aşağıdaki butona tıklayarak kaydını tamamla:</p>
-                <a href="${inviteLink}" style="display: inline-block; background: #4f46e5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Sisteme Kaydol</a>
-            </div>`;
-
-        await sendMail(childEmail, "Aile Grubu Daveti", htmlContent);
-        return res.status(200).json({ success: true, message: "Davet başarıyla gönderildi!" });
-
+        res.json({ success: true, message: "Davet başarıyla gönderildi!" });
     } catch (err) {
-        console.error("Invite Hatası:", err);
-        return res.status(500).json({ success: false, error: err.detail || "E-posta zaten kayıtlı olabilir." });
+        console.error("DAVET HATASI:", err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 app.post('/register', async (req, res) => {
@@ -251,20 +245,20 @@ app.post('/update-child-password', async (req, res) => {
 app.delete('/delete-child/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // Önce çocuğun görevlerini siliyoruz (Foreign Key hatası almamak için)
+        // Önce bağlı görevleri temizle
         await db.query("DELETE FROM tasks WHERE child_id = $1", [id]);
         
-        // Sonra kullanıcıyı siliyoruz
-        const result = await db.query("DELETE FROM users WHERE id = $1 AND role = 'child'", [id]);
+        // Sonra kullanıcıyı sil
+        const result = await db.query("DELETE FROM users WHERE id = $1", [id]);
         
         if (result.rowCount > 0) {
-            res.json({ success: true, message: "Çocuk ve ilgili görevler silindi." });
+            res.json({ success: true, message: "Çocuk başarıyla silindi." });
         } else {
-            res.status(404).json({ success: false, message: "Kayıt bulunamadı." });
+            res.status(404).json({ success: false, message: "Kayıt bulunamadı. ID hatalı olabilir." });
         }
     } catch (err) {
         console.error("Silme hatası:", err);
-        res.status(500).json({ error: "İşlem başarısız oldu." });
+        res.status(500).json({ error: "Sunucu tarafında silme hatası." });
     }
 });
 db.query('SELECT current_database()').then(res => console.log("Kodun bağlandığı DB:", res.rows[0].current_database));
