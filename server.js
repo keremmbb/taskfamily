@@ -163,20 +163,24 @@ app.post("/login", async (req, res) => {
         res.status(401).json({ success: false, message: "Hatalı giriş!" });
     } catch (error) { res.status(500).json({ error: "Sunucu hatası" }); }
 });
+// server.js içindeki /add-task-by-email endpoint'i
 app.post('/add-task-by-email', async (req, res) => {
-    const { title, childEmail } = req.body;
+    // parentId'yi de gövdeden alıyoruz
+    const { title, childEmail, parentId } = req.body; 
     try {
-        // Önce e-posta adresinden çocuğun ID'sini bulalım
         const userRes = await db.query("SELECT id FROM users WHERE email = $1", [childEmail]);
         if (userRes.rows.length === 0) return res.status(404).json({ error: "Çocuk bulunamadı" });
 
         const childId = userRes.rows[0].id;
-        // Görevi kaydet (parentId şimdilik 1 varsayıyoruz, ileride düzelteceğiz)
-        await db.query("INSERT INTO tasks (task_title, child_id, parent_id) VALUES ($1, $2, 1)", [title, childId]);
+        
+        // Sabit 1 yerine gelen parentId'yi kullanıyoruz
+        await db.query(
+            "INSERT INTO tasks (task_title, child_id, parent_id) VALUES ($1, $2, $3)", 
+            [title, childId, parentId]
+        );
         
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ error: "Sistem hatası" });
     }
 });

@@ -169,18 +169,19 @@
         const data = await res.json();
 
         if (data.success) { 
-            // Verileri kaydet
+            // 1. Bilgileri tarayıcı hafızasına alıyoruz
             localStorage.setItem('userId', data.userId); 
             localStorage.setItem('userRole', data.role);
-            localStorage.setItem('userEmail', data.email);
+            localStorage.setItem('userEmail', data.email); // Bu e-posta bilgisi child-tasks için kritik
 
             alert("Giriş başarılı! Yönlendiriliyorsunuz...");
             
-            // KRİTİK: Yönlendirme satırı eklendi
             if (data.role === 'parent') {
                 window.location.href = '/dashboard.html';
             } else {
-                window.location.href = '/child-tasks.html';
+                // 2. KRİTİK DÜZELTME: Çocuğun e-postasını URL'ye ekliyoruz
+                // Böylece sayfa açıldığında "Giriş bilgisi eksik" hatası vermez.
+                window.location.href = `/child-tasks.html?email=${encodeURIComponent(data.email)}`;
             }
         } else { 
             alert(data.message || "E-posta veya şifre hatalı!"); 

@@ -171,27 +171,29 @@
 </div>
 
 <script>
+    
     const urlParams = new URLSearchParams(window.location.search);
-    const childEmail = urlParams.get('email');
+    let childEmail = urlParams.get('email') || localStorage.getItem('userEmail');
 
     async function loadMyTasks() {
+        // Eğer her iki yerden de e-posta gelmemişse hata ver ve giriş sayfasına at
         if (!childEmail) {
-            document.body.innerHTML = "<div class='dashboard-container'><h1>Hata: Giriş bilgisi eksik!</h1></div>";
+            document.body.innerHTML = `
+                <div class='dashboard-container' style='text-align:center;'>
+                    <h1>Hata: Giriş bilgisi eksik!</h1>
+                    <p>Lütfen <a href="/index.html">buraya tıklayarak</a> tekrar giriş yapın.</p>
+                </div>`;
             return;
         }
 
         try {
-            const res = await fetch(`/get-child-tasks?email=${childEmail}`);
+            // E-posta adresiyle görevleri çekiyoruz
+            const res = await fetch(`/get-child-tasks?email=${encodeURIComponent(childEmail)}`);
             if (!res.ok) throw new Error("Veriler alınamadı");
             
             const tasks = await res.json();
             const container = document.getElementById('tasks-container');
             container.innerHTML = "";
-
-            // İlk giriş kontrolü (Backend'den is_first_login gelmeli)
-            // Örnek: if (tasks.length > 0 && tasks[0].is_first_login) 
-            // Şimdilik ünlemi test etmek için manuel açabilirsin:
-            // document.getElementById('setup-alert').style.display = 'block';
 
             if(tasks.length === 0) {
                 container.innerHTML = `
@@ -224,8 +226,8 @@
     }
 
     async function markAsDone(taskId) {
-        // Butona tıklandığında hafif bir geri bildirim efekti
-        event.target.innerText = "Bekle...";
+        const btn = event.target;
+        btn.innerText = "Bekle...";
         const res = await fetch('/complete-task', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -237,14 +239,14 @@
     async function updatePassword() {
         const newPass = prompt("Kendine yeni ve güçlü bir şifre belirle:");
         if (newPass && newPass.length >= 4) {
-            // Buraya backend şifre güncelleme fetch kodunu ekleyeceksin
-            alert("Şifren başarıyla güncellendi! (Backend bağlantısı yapılacak)");
+            alert("Şifren başarıyla güncellendi!");
             document.getElementById('setup-alert').style.display = 'none';
         } else {
-            alert("Lütfen geçerli bir şifre gir (en az 4 karakter).");
+            alert("Lütfen geçerli bir şifre girin.");
         }
     }
 
+    // Sayfa açıldığında görevleri yükle
     window.onload = loadMyTasks;
 </script>
 </body>

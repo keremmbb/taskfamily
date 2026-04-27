@@ -129,27 +129,26 @@
         alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
     }
 }
+async function assignTask() {
+    const title = document.getElementById('task-title').value;
+    const childEmail = document.getElementById('target-child-email').value;
+    const parentId = localStorage.getItem('userId');
 
-    // --- Diğer fonksiyonların (assignTask, loadSentTasks) aynı kalabilir ---
-    async function assignTask() {
-        const title = document.getElementById('task-title').value;
-        const childEmail = document.getElementById('target-child-email').value;
-        
-        if(!title || !childEmail) return alert("Alanları doldurun!");
+    if(!title || !childEmail || !parentId) return alert("Eksik bilgi!");
 
-        const res = await fetch('/add-task-by-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, childEmail })
-        });
-        
-        const data = await res.json();
-        if(data.success) {
-            alert("Görev başarıyla iletildi!");
-            document.getElementById('task-title').value = "";
-            loadSentTasks(); // Listeyi yenile
-        }
+    const res = await fetch('/add-task-by-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, childEmail, parentId })
+    });
+    
+    const data = await res.json();
+    if(data.success) {
+        alert("Görev başarıyla iletildi!");
+        document.getElementById('task-title').value = "";
+        loadSentTasks(); 
     }
+}
 
     async function loadSentTasks() {
         try {
