@@ -67,6 +67,21 @@ app.get('/get-my-children', async (req, res) => {
         res.status(500).json({ error: "Çocuklar listelenemedi." });
     }
 });
+// server.js içine ekle
+app.get('/get-my-children', async (req, res) => {
+    const { parentId } = req.query;
+    try {
+        // parent_id'si giriş yapan veliye eşit olan 'child' rolündeki kullanıcıları getir
+        const result = await db.query(
+            "SELECT id, username, email, is_first_login FROM users WHERE parent_id = $1 AND role = 'child'",
+            [parentId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Çocuklar getirilirken hata:", err);
+        res.status(500).json({ error: "Sunucu hatası" });
+    }
+});
 
 // --- API ENDPOINTLERİ ---
 app.post('/add-task', async (req, res) => {

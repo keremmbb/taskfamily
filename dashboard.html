@@ -178,51 +178,63 @@ async function assignTask() {
     }
     async function loadMyChildren() {
     const parentId = localStorage.getItem('userId');
-    const response = await fetch(`/get-my-children?parentId=${parentId}`);
-    const children = await response.json();
+    if (!parentId) return;
 
-    const listDiv = document.getElementById('childrenList');
-    listDiv.innerHTML = ""; // İçini temizle
+    try {
+        const response = await fetch(`/get-my-children?parentId=${parentId}`);
+        const children = await response.json();
 
-    children.forEach(child => {
-        listDiv.innerHTML += `
-            <div class="child-card" style="border: 1px solid #ddd; padding: 10px; margin: 5px; border-radius: 8px;">
-                <strong>${child.username}</strong> (${child.email})
-                <button onclick="openTaskModal('${child.id}')" style="margin-left: 10px;">Görev Ata</button>
-            </div>
-        `;
-    });
+        const listDiv = document.getElementById('childrenList'); // HTML'de bu ID'li bir div olmalı
+        listDiv.innerHTML = ""; 
+
+        if (children.length === 0) {
+            listDiv.innerHTML = "<p style='color:gray;'>Henüz kayıtlı çocuk bulunmuyor.</p>";
+            return;
+        }
+
+        children.forEach(child => {
+            listDiv.innerHTML += `
+                <div class="child-card" style="border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: white;">
+                    <div>
+                        <strong>${child.username || 'İsimsiz Kahraman'}</strong> <br>
+                        <small style="color: #64748b;">${child.email}</small>
+                    </div>
+                    <div>
+                        <button onclick="openTaskModal('${child.id}', '${child.email}')" style="background: #4f46e5; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Görev Ata</button>
+                        <button onclick="removeChild('${child.id}')" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-left: 5px;">Sil</button>
+                    </div>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.error("Çocuk listesi yüklenemedi", e);
+    }
 }
 async function removeChild(childId) {
-    // Yanlışlıkla silmeyi önlemek için onay soruyoruz
-    const confirmDelete = confirm("Bu çocuğu silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm görevleri silinir.");
-    
-    if (confirmDelete) {
-        try {
-            const res = await fetch(`/delete-child/${childId}`, {
-                method: 'DELETE'
-            });
-            const data = await res.json();
-            
-            if (data.success) {
-                alert("Başarıyla silindi.");
-                loadMyChildren(); // Listeyi otomatik yeniler
-            } else {
-                alert("Hata: " + data.message);
-            }
-        } catch (error) {
-            console.error("Silme isteği gönderilemedi:", error);
-            alert("Sunucuyla bağlantı kurulamadı.");
+    if (!confirm("Bu çocuğu ve tüm görevlerini silmek istediğinize emin misiniz?")) return;
+
+    try {
+        const res = await fetch(`/delete-child/${childId}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert("Çocuk başarıyla silindi.");
+            loadMyChildren(); // Listeyi yenile
+        } else {
+            alert("Hata: " + data.message);
         }
+    } catch (error) {
+        alert("Silme işlemi sırasında sunucu hatası oluştu.");
     }
 }
 
 // Sayfa açıldığında fonksiyonu çalıştır
-window.onload = () => {
+window.onload = function() {
     loadMyChildren();
-    // Varsa diğer yükleme fonksiyonların...
+    // Varsa diğer yükleme fonksiyonların (loadSentTasks vb.)
 };
-
     window.onload = loadSentTasks;
 </script>
 </body>
