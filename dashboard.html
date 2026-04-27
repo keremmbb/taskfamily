@@ -193,6 +193,29 @@ async function assignTask() {
         `;
     });
 }
+async function removeChild(childId) {
+    // Yanlışlıkla silmeyi önlemek için onay soruyoruz
+    const confirmDelete = confirm("Bu çocuğu silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm görevleri silinir.");
+    
+    if (confirmDelete) {
+        try {
+            const res = await fetch(`/delete-child/${childId}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                alert("Başarıyla silindi.");
+                loadMyChildren(); // Listeyi otomatik yeniler
+            } else {
+                alert("Hata: " + data.message);
+            }
+        } catch (error) {
+            console.error("Silme isteği gönderilemedi:", error);
+            alert("Sunucuyla bağlantı kurulamadı.");
+        }
+    }
+}
 
 // Sayfa açıldığında fonksiyonu çalıştır
 window.onload = () => {

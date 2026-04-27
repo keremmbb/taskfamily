@@ -187,12 +187,22 @@
 </div>
 
 <script>
-    
+    const isFirstLogin = localStorage.getItem('isFirstLogin');
     const urlParams = new URLSearchParams(window.location.search);
     let childEmail = urlParams.get('email') || localStorage.getItem('userEmail');
 
     async function loadMyTasks() {
-        // Eğer her iki yerden de e-posta gelmemişse hata ver ve giriş sayfasına at
+        // İlk giriş uyarısı kontrolü: Hafızada isFirstLogin 'true' ise kutuyu göster
+        const isFirstLogin = localStorage.getItem('isFirstLogin');
+        const alertBox = document.getElementById('setup-alert');
+        
+        if (isFirstLogin === 'true') {
+            alertBox.style.display = 'block';
+        } else {
+            alertBox.style.display = 'none';
+        }
+
+        // Eğer e-posta gelmemişse hata ver ve giriş sayfasına yönlendir
         if (!childEmail) {
             document.body.innerHTML = `
                 <div class='dashboard-container' style='text-align:center;'>
@@ -204,7 +214,6 @@
 
         try {
             // E-posta adresiyle görevleri çekiyoruz
-            document.getElementById('setup-alert').style.display = 'block';
             const res = await fetch(`/get-child-tasks?email=${encodeURIComponent(childEmail)}`);
             if (!res.ok) throw new Error("Veriler alınamadı");
             
@@ -243,8 +252,7 @@
     }
 
     async function markAsDone(taskId) {
-        const btn = event.target;
-        btn.innerText = "Bekle...";
+        event.target.innerText = "Bekle...";
         const res = await fetch('/complete-task', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -254,34 +262,37 @@
     }
 
     async function updatePassword() {
-    const newPass = prompt("Lütfen yeni ve güvenli bir şifre belirleyin:");
-    
-    if (newPass && newPass.length >= 4) {
-        try {
-            const res = await fetch('/update-child-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    email: childEmail, // Sayfa başında tanımladığımız değişken
-                    newPassword: newPass 
-                })
-            });
-            
-            const data = await res.json();
-            
-            if (data.success) {
-                alert("Harika! Şifren başarıyla değiştirildi.");
-                document.getElementById('setup-alert').style.display = 'none';
-            } else {
-                alert("Bir hata oluştu: " + data.error);
+        const newPass = prompt("Lütfen yeni ve güvenli bir şifre belirleyin:");
+        
+        if (newPass && newPass.length >= 4) {
+            try {
+                const res = await fetch('/update-child-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: childEmail, 
+                        newPassword: newPass 
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("Harika! Şifren başarıyla değiştirildi.");
+                    
+                    // KRİTİK: Hafızayı güncelle ve kutuyu kapat
+                    localStorage.setItem('isFirstLogin', 'false'); 
+                    document.getElementById('setup-alert').style.display = 'none';
+                } else {
+                    alert("Bir hata oluştu: " + (data.error || data.message));
+                }
+            } catch (err) {
+                alert("Sunucuya bağlanılamadı.");
             }
-        } catch (err) {
-            alert("Sunucuya bağlanılamadı.");
+        } else {
+            alert("Şifre en az 4 karakter olmalıdır!");
         }
-    } else {
-        alert("Şifre en az 4 karakter olmalıdır!");
     }
-}
 
     // Sayfa açıldığında görevleri yükle
     window.onload = loadMyTasks;

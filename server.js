@@ -170,8 +170,10 @@ app.post('/login', async (req, res) => {
                     success: true, 
                     userId: user.id, 
                     role: user.role, 
-                    email: user.email 
-                });
+                    email: user.email,
+                    isFirstLogin: user.is_first_login // BU SATIRI EKLE
+            });
+                
             }
         }
         
@@ -207,7 +209,10 @@ app.post('/add-task-by-email', async (req, res) => {
 app.post('/complete-task', async (req, res) => {
     const { taskId } = req.body;
     try {
-        await db.query("UPDATE tasks SET status = 'completed' WHERE id = $1", [taskId]);
+        await db.query(
+    "UPDATE users SET password = $1, is_first_login = FALSE WHERE email = $2",
+    [hashedPassword, email]
+);
         res.json({ success: true });
     } catch (err) { res.status(500).send("Hata"); }
 });
@@ -226,6 +231,25 @@ app.post('/update-child-password', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Şifre güncellenirken hata oluştu." });
+    }
+});
+app.delete('/delete-child/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Önce çocuğun görevlerini siliyoruz (Foreign Key hatası almamak için)
+        await db.query("DELETE FROM tasks WHERE child_id = $1", [id]);
+        
+        // Sonra kullanıcıyı siliyoruz
+        const result = await db.query("DELETE FROM users WHERE id = $1 AND role = 'child'", [id]);
+        
+        if (result.rowCount > 0) {
+            res.json({ success: true, message: "Çocuk ve ilgili görevler silindi." });
+        } else {
+            res.status(404).json({ success: false, message: "Kayıt bulunamadı." });
+        }
+    } catch (err) {
+        console.error("Silme hatası:", err);
+        res.status(500).json({ error: "İşlem başarısız oldu." });
     }
 });
 db.query('SELECT current_database()').then(res => console.log("Kodun bağlandığı DB:", res.rows[0].current_database));
