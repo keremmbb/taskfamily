@@ -152,7 +152,7 @@
     }
 
     async function handleLogin() {
-    const email = document.getElementById('log-email').value;
+    const email = document.getElementById('log-email').value.trim(); // Boşlukları temizler
     const password = document.getElementById('log-pass').value;
 
     if (!email || !password) {
@@ -166,29 +166,30 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
+        
         const data = await res.json();
 
         if (data.success) { 
-            // 1. Bilgileri tarayıcı hafızasına alıyoruz
+            // Bilgileri tarayıcıya kaydet
             localStorage.setItem('userId', data.userId); 
             localStorage.setItem('userRole', data.role);
-            localStorage.setItem('userEmail', data.email); // Bu e-posta bilgisi child-tasks için kritik
+            localStorage.setItem('userEmail', data.email);
 
             alert("Giriş başarılı! Yönlendiriliyorsunuz...");
             
             if (data.role === 'parent') {
                 window.location.href = '/dashboard.html';
             } else {
-                // 2. KRİTİK DÜZELTME: Çocuğun e-postasını URL'ye ekliyoruz
-                // Böylece sayfa açıldığında "Giriş bilgisi eksik" hatası vermez.
+                // Çocuğu mail parametresiyle birlikte gönderiyoruz
                 window.location.href = `/child-tasks.html?email=${encodeURIComponent(data.email)}`;
             }
         } else { 
+            // 401 hatası aldığında buradaki mesaj görünür
             alert(data.message || "E-posta veya şifre hatalı!"); 
         }
     } catch (error) {
         console.error("Login hatası:", error);
-        alert("Giriş yapılırken bir hata oluştu.");
+        alert("Sunucuya bağlanırken bir hata oluştu.");
     }
 }
 

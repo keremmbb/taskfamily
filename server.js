@@ -146,22 +146,42 @@ app.post('/verify-code', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Sistem hatası" }); }
 });
 
-app.post("/login", async (req, res) => {
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-        const user = result.rows[0];
-        if (user) {
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (isMatch || user.password === password) {
-                if (user.role === 'parent' && !user.is_verified) {
-                    return res.status(401).json({ success: false, message: "Lütfen e-postanızı onaylayın!" });
-                }
-                return res.json({ success: true, userId: user.id, role: user.role, email: user.email });
+        
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            
+            // Şifre kontrolü: Veritabanındaki şifre "123" gibi düz metin mi 
+            // yoksa $2b$ ile başlayan karmaşık bir kod mu?
+            let isMatch = false;
+            if (user.password.startsWith('$2b$')) {
+                // Eğer şifrelenmişse bcrypt ile karşılaştır
+                isMatch = await bcrypt.compare(password, user.password);
+            } else {
+                // Eğer düz metinse direkt karşılaştır
+                isMatch = (password === user.password);
+            }
+
+            if (isMatch) {
+                return res.json({ 
+                    success: true, 
+                    userId: user.id, 
+                    role: user.role, 
+                    email: user.email 
+                });
             }
         }
-        res.status(401).json({ success: false, message: "Hatalı giriş!" });
-    } catch (error) { res.status(500).json({ error: "Sunucu hatası" }); }
+        
+        // Eğer kullanıcı yoksa veya şifre yanlışsa 401 döndür
+        res.status(401).json({ success: false, message: "E-posta veya şifre hatalı!" });
+        
+    } catch (error) {
+        console.error("Login Error:", error);
+        res.status(500).json({ error: "Sunucu hatası" });
+    }
 });
 // server.js içindeki /add-task-by-email endpoint'i
 app.post('/add-task-by-email', async (req, res) => {
