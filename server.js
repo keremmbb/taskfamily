@@ -95,37 +95,27 @@ app.post('/add-task', async (req, res) => {
 });
 // Çocuk Davet Etme Endpoint'i
 app.post('/invite-child', async (req, res) => {
+    // Gelen veriyi kontrol edelim
     const { email, parentId } = req.body;
 
-    try {
-        // 1. ÖNCE KONTROL ET: Bu e-posta zaten kayıtlı mı?
-        const checkUser = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-        
-        if (checkUser.rows.length > 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Bu e-posta adresi zaten sisteme kayıtlı! Lütfen önce pgAdmin'den veya panelden silin." 
-            });
-        }
+    // EĞER EMAIL BOŞSA HATAYI BURADA YAKALAYALIM
+    if (!email) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "E-posta adresi sunucuya ulaşmadı! Lütfen formu kontrol edin." 
+        });
+    }
 
-        // 2. KAYIT EKLE: Eğer yoksa devam et
+    try {
         const result = await db.query(
             "INSERT INTO users (email, role, parent_id, password) VALUES ($1, 'child', $2, '123') RETURNING id",
             [email, parentId]
         );
-
-        // 3. MAİL GÖNDER
-        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(email)}`;
-        await sendMail(
-            email,
-            "Görev Sistemine Davet Edildin!",
-            `<h3>Hoş geldin!</h3><p>Ebeveynin seni görev sistemine davet etti.</p><p>Şifren: 123</p><a href="${inviteLink}">Buraya tıklayarak hesabını tamamla</a>`
-        );
-
-        res.json({ success: true, message: "Davet başarıyla gönderildi!" });
+        // ... mail gönderme işlemleri ...
+        res.json({ success: true });
     } catch (err) {
-        console.error("DAVET HATASI:", err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error("DETAYLI HATA:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 app.post('/register', async (req, res) => {

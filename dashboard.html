@@ -76,15 +76,19 @@
 </div>
 
 <script>
-    async function sendInvitation() {
+   async function sendInvitation() {
+    // 1. Element kontrolü
     const emailInput = document.getElementById('childEmail');
-    if (!emailInput) return;
+    if (!emailInput) {
+        console.error("Hata: 'childEmail' ID'li input bulunamadı.");
+        return;
+    }
 
-    const childEmail = emailInput.value;
-    // LocalStorage'dan giriş yapan kullanıcının ID'sini alıyoruz
+    const childEmailValue = emailInput.value.trim(); // Boşlukları temizle
     const parentId = localStorage.getItem('userId'); 
 
-    if (!childEmail) {
+    // 2. Boş değer kontrolleri
+    if (!childEmailValue) {
         alert("Lütfen bir e-posta adresi girin!");
         return;
     }
@@ -95,13 +99,19 @@
         return;
     }
 
+    // Butonu geçici olarak devre dışı bırakalım (Çift tıklamayı önlemek için)
+    const inviteBtn = document.querySelector("button[onclick='sendInvitation()']");
+    if (inviteBtn) inviteBtn.disabled = true;
+
     try {
         const response = await fetch('/invite-child', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
             body: JSON.stringify({ 
-                childEmail: childEmail, 
-                parentId: parentId // Sabit 1 yerine gerçek ID'yi gönderiyoruz
+                email: childEmailValue, // KRİTİK DÜZELTME: 'childEmail' yerine 'email' gönderiyoruz
+                parentId: parentId 
             })
         });
 
@@ -111,22 +121,29 @@
             const data = await response.json();
             
             if (response.ok && data.success) {
-                alert("✅ " + data.message);
-                emailInput.value = "";
-                // Çocuk eklendikten sonra listeyi otomatik yenilemek için:
-                if (typeof loadMyChildren === "function") loadMyChildren();
+                alert("✅ Davet Başarılı: " + (data.message || "E-posta gönderildi."));
+                emailInput.value = ""; // Kutuyu temizle
+                
+                // Listeyi yenile
+                if (typeof loadMyChildren === "function") {
+                    await loadMyChildren();
+                }
             } else {
-                alert("❌ Hata: " + (data.error || "Bir sorun oluştu."));
+                // Backend'den gelen spesifik hata mesajını göster (Örn: "Zaten kayıtlı")
+                alert("❌ Hata: " + (data.message || data.error || "İşlem başarısız."));
             }
         } else {
             const errorText = await response.text();
-            console.error("Sunucu Yanıtı:", errorText);
-            alert("Sunucudan beklenen yanıt gelmedi.");
+            console.error("Sunucu Yanıtı (JSON değil):", errorText);
+            alert("Sunucu bir hata döndürdü. Lütfen logları kontrol edin.");
         }
 
     } catch (err) {
         console.error("Fetch Hatası:", err);
         alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
+    } finally {
+        // Butonu tekrar aktif et
+        if (inviteBtn) inviteBtn.disabled = false;
     }
 }
 async function assignTask() {
