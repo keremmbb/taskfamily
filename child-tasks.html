@@ -148,6 +148,22 @@
             padding: 40px;
             color: #a0aec0;
         }
+        #setup-alert {
+            display: none; /* Başlangıçta gizli, JS ile açacağız */
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite; /* Dikkat çekmesi için hafif nabız efekti */
+        }
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
     </style>
 </head>
 <body>
@@ -188,6 +204,7 @@
 
         try {
             // E-posta adresiyle görevleri çekiyoruz
+            document.getElementById('setup-alert').style.display = 'block';
             const res = await fetch(`/get-child-tasks?email=${encodeURIComponent(childEmail)}`);
             if (!res.ok) throw new Error("Veriler alınamadı");
             
@@ -237,14 +254,34 @@
     }
 
     async function updatePassword() {
-        const newPass = prompt("Kendine yeni ve güçlü bir şifre belirle:");
-        if (newPass && newPass.length >= 4) {
-            alert("Şifren başarıyla güncellendi!");
-            document.getElementById('setup-alert').style.display = 'none';
-        } else {
-            alert("Lütfen geçerli bir şifre girin.");
+    const newPass = prompt("Lütfen yeni ve güvenli bir şifre belirleyin:");
+    
+    if (newPass && newPass.length >= 4) {
+        try {
+            const res = await fetch('/update-child-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: childEmail, // Sayfa başında tanımladığımız değişken
+                    newPassword: newPass 
+                })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                alert("Harika! Şifren başarıyla değiştirildi.");
+                document.getElementById('setup-alert').style.display = 'none';
+            } else {
+                alert("Bir hata oluştu: " + data.error);
+            }
+        } catch (err) {
+            alert("Sunucuya bağlanılamadı.");
         }
+    } else {
+        alert("Şifre en az 4 karakter olmalıdır!");
     }
+}
 
     // Sayfa açıldığında görevleri yükle
     window.onload = loadMyTasks;
