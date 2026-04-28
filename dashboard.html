@@ -22,62 +22,57 @@
         
         .main-content { background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; min-height: 400px; }
         
-        /* Bölümleri başlangıçta gizlemek için */
         .content-section { display: none; }
         .content-section.active { display: block; }
 
         .child-card { border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
         .logout-btn { padding: 8px 15px; border-radius: 8px; border: 1px solid #ff4757; color: #ff4757; cursor: pointer; background: none; }
         input { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+        
         @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-.fade-in-section {
-    animation: fadeIn 0.5s ease-out forwards;
-}
-/* Ana Sayfa Kart Düzeni */
-.home-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 25px;
-}
+        .fade-in-section {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
 
-.home-card {
-    padding: 25px;
-    border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+        /* Ana Sayfa Kart Düzeni - Tıklama ve Hover Özellikleri Kaldırıldı */
+        .home-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
 
-.home-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary);
-    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
-}
+        .home-card {
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            /* İmleç ve hover efektleri devre dışı */
+            cursor: default; 
+        }
 
-.home-card i {
-    font-size: 2.5rem;
-    display: block;
-    margin-bottom: 15px;
-}
+        .home-card i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 15px;
+        }
 
-.home-card h3 {
-    color: var(--primary);
-    margin-bottom: 10px;
-}
+        .home-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
 
-.home-card p {
-    font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.4;
-}
+        .home-card p {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -90,7 +85,7 @@
     <div class="dashboard-grid">
         <aside class="sidebar">
             <ul>
-                <li class="active" onclick="showSection('summary-section', this)">🏠 Özet</li>
+                <li class="active" onclick="showSection('summary-section', this)">🏠 Ana Sayfa</li>
                 <li onclick="showSection('children-section', this)">👶 Çocuklarım</li>
                 <li onclick="showSection('tasks-section', this)">📋 Görevler / Görev Ata</li>
             </ul>
@@ -98,30 +93,30 @@
         
         <main class="main-content">
             <div id="summary-section" class="content-section active">
-    <h2>Yönetim Paneli Ana Sayfa 👋</h2>
-    <p style="color: #64748b;">Hızlı erişim butonlarını kullanarak işlemlerinizi gerçekleştirebilirsiniz.</p>
+                <h2>Yönetim Paneli Ana Sayfa 👋</h2>
+                <p style="color: #64748b;">Panel üzerindeki sekmeleri kullanarak çocuklarınızı ve görevleri yönetebilirsiniz.</p>
 
-    <div class="home-grid">
-        <div class="home-card" onclick="showSection('children-section', document.querySelector('.sidebar li:nth-child(2)'))">
-            <span>👶</span>
-            <h3>Çocuklarım</h3>
-            <p>Sisteme kayıtlı çocuklarınızı listeleyin, yenilerini ekleyin veya mevcut olanları yönetin.</p>
-        </div>
+                <div class="home-grid">
+                    <div class="home-card">
+                        <span>👶</span>
+                        <h3>Çocuklarım</h3>
+                        <p>Sisteme kayıtlı çocuklarınızı listeleyin, yenilerini ekleyin veya mevcut olanları yönetin.</p>
+                    </div>
 
-        <div class="home-card" onclick="showSection('tasks-section', document.querySelector('.sidebar li:nth-child(3)'))">
-            <span>📋</span>
-            <h3>Görev Yönetimi</h3>
-            <p>Çocuklarınıza yeni görevler atayın veya daha önce verdiğiniz görevlerin durumunu takip edin.</p>
-        </div>
+                    <div class="home-card">
+                        <span>📋</span>
+                        <h3>Görev Yönetimi</h3>
+                        <p>Çocuklarınıza yeni görevler atayın veya daha önce verdiğiniz görevlerin durumunu takip edin.</p>
+                    </div>
 
-        <div class="home-card" style="cursor: default; border-style: dashed;">
-            <span>📩</span>
-            <h3>Hızlı Davet</h3>
-            <input type="email" id="homeChildEmail" placeholder="E-posta adresi" style="width: 100%; margin: 10px 0; padding: 8px;">
-            <button onclick="sendInvitationFromHome()" style="background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; width: 100%;">Davet Gönder</button>
-        </div>
-    </div>
-</div>
+                    <div class="home-card" style="border-style: dashed;">
+                        <span>📩</span>
+                        <h3>Hızlı Davet</h3>
+                        <input type="email" id="homeChildEmail" placeholder="E-posta adresi" style="width: 100%; margin: 10px 0; padding: 8px;">
+                        <button onclick="sendInvitationFromHome()" style="background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; width: 100%;">Davet Gönder</button>
+                    </div>
+                </div>
+            </div>
 
             <div id="children-section" class="content-section">
                 <h2>👶 Çocuklarım</h2>
@@ -131,43 +126,42 @@
             </div>
 
             <div id="tasks-section" class="content-section">
-    <h2>📋 Görev Yönetimi</h2>
-    
-    <div style="display: flex; gap: 20px; margin: 20px 0;">
-        <button id="btn-view" onclick="toggleTaskSubSection('view-tasks')" style="flex: 1; padding: 20px; border-radius: 15px; border: 2px solid #4f46e5; background: white; cursor: pointer; font-weight: 600; color: #4f46e5; transition: 0.3s;">
-            🔍 Görevlerim (Verilen Görevler)
-        </button>
-        <button id="btn-assign" onclick="toggleTaskSubSection('assign-task')" style="flex: 1; padding: 20px; border-radius: 15px; border: none; background: #4f46e5; cursor: pointer; font-weight: 600; color: white; transition: 0.3s;">
-            ➕ Görev Ata
-        </button>
+                <h2>📋 Görev Yönetimi</h2>
+                
+                <div style="display: flex; gap: 20px; margin: 20px 0;">
+                    <button id="btn-view" onclick="toggleTaskSubSection('view-tasks')" style="flex: 1; padding: 20px; border-radius: 15px; border: 2px solid #4f46e5; background: white; cursor: pointer; font-weight: 600; color: #4f46e5; transition: 0.3s;">
+                        🔍 Görevlerim (Verilen Görevler)
+                    </button>
+                    <button id="btn-assign" onclick="toggleTaskSubSection('assign-task')" style="flex: 1; padding: 20px; border-radius: 15px; border: none; background: #4f46e5; cursor: pointer; font-weight: 600; color: white; transition: 0.3s;">
+                        ➕ Görev Ata
+                    </button>
+                </div>
+
+                <div id="sub-assign-task" class="fade-in-section" style="display: none; background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0;">
+                    <h3>Yeni Görev Oluştur</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <input type="text" id="task-title" placeholder="Görev adı (örn: Kitap oku)">
+                        <input type="email" id="target-child-email" placeholder="Çocuğun e-postası">
+                        <button onclick="assignTask()" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">Görevi Gönder</button>
+                    </div>
+                </div>
+
+                <div id="sub-view-tasks" class="fade-in-section" style="display: none; margin-top: 20px;">
+                    <h3>Son Gönderilen Görevler</h3>
+                    <div id="parent-tasks-list" style="margin-top: 15px;">
+                        <p style="color: #64748b;">Henüz görev seçilmedi.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <div id="sub-assign-task" class="fade-in-section" style="display: none; background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0;">
-        <h3>Yeni Görev Oluştur</h3>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-            <input type="text" id="task-title" placeholder="Görev adı (örn: Kitap oku)">
-            <input type="email" id="target-child-email" placeholder="Çocuğun e-postası">
-            <button onclick="assignTask()" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">Görevi Gönder</button>
-        </div>
-    </div>
-
-    <div id="sub-view-tasks" class="fade-in-section" style="display: none; margin-top: 20px;">
-        <h3>Son Gönderilen Görevler</h3>
-        <div id="parent-tasks-list" style="margin-top: 15px;">
-            <p style="color: #64748b;">Henüz görev seçilmedi.</p>
-        </div>
-    </div>
-</div>
 <script>
     const parentId = localStorage.getItem('userId');
 
-    // Bölüm değiştirme fonksiyonu (Sidebar çalışması için)
     function showSection(sectionId, element) {
-        // Tüm bölümleri gizle
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        // Seçilen bölümü göster
         document.getElementById(sectionId).classList.add('active');
-        // Sidebar linklerini güncelle
         document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
         element.classList.add('active');
 
@@ -191,7 +185,9 @@
     }
 
     async function sendInvitation() {
-        const email = document.getElementById('childEmail').value;
+        const email = document.getElementById('homeChildEmail').value || document.getElementById('childEmail')?.value;
+        if(!email) return alert("Lütfen bir e-posta adresi girin!");
+        
         const res = await fetch('/invite-child', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -205,102 +201,83 @@
         localStorage.clear();
         window.location.href = "/index.html";
     }
-   function toggleTaskSubSection(sub) {
-    const assignDiv = document.getElementById('sub-assign-task');
-    const viewDiv = document.getElementById('sub-view-tasks');
-    const btnAssign = document.getElementById('btn-assign');
-    const btnView = document.getElementById('btn-view');
 
-    // Animasyonu sıfırlamak için sınıfları önce çıkarıp sonra ekleyeceğiz
-    assignDiv.classList.remove('fade-in-section');
-    viewDiv.classList.remove('fade-in-section');
+    function toggleTaskSubSection(sub) {
+        const assignDiv = document.getElementById('sub-assign-task');
+        const viewDiv = document.getElementById('sub-view-tasks');
+        const btnAssign = document.getElementById('btn-assign');
+        const btnView = document.getElementById('btn-view');
 
-    if (sub === 'assign-task') {
-        assignDiv.style.display = 'block';
-        viewDiv.style.display = 'none';
-        
-        // Buton stillerini değiştir (aktif/pasif görünümü)
-        btnAssign.style.background = "#4f46e5"; btnAssign.style.color = "white";
-        btnView.style.background = "white"; btnView.style.color = "#4f46e5";
-        
-        // Animasyonu tetikle
-        void assignDiv.offsetWidth; // Reflow: Tarayıcıyı değişikliği fark etmeye zorlar
-        assignDiv.classList.add('fade-in-section');
-    } else {
-        assignDiv.style.display = 'none';
-        viewDiv.style.display = 'block';
-        
-        btnView.style.background = "#4f46e5"; btnView.style.color = "white";
-        btnAssign.style.background = "white"; btnAssign.style.color = "#4f46e5";
+        assignDiv.classList.remove('fade-in-section');
+        viewDiv.classList.remove('fade-in-section');
 
-        loadSentTasks();
-        
-        void viewDiv.offsetWidth; 
-        viewDiv.classList.add('fade-in-section');
-    }
-}
-async function loadSentTasks() {
-    const listDiv = document.getElementById('parent-tasks-list');
-    const pId = localStorage.getItem('userId');
-    
-    try {
-        // server.js'deki /get-parent-tasks endpointini kullanıyoruz
-        const res = await fetch(`/get-parent-tasks?parentId=${pId}`);
-        const tasks = await res.json();
-        
-        if (tasks.length === 0) {
-            listDiv.innerHTML = "<p>Henüz kimseye görev atamadınız.</p>";
-            return;
-        }
-
-        listDiv.innerHTML = tasks.map(t => `
-            <div class="child-card" style="margin-bottom: 8px;">
-                <div>
-                    <strong>${t.task_title}</strong> <br>
-                    <small style="color: #64748b;">Durum: ${t.status === 'completed' ? '✅ Tamamlandı' : '⏳ Bekliyor'}</small>
-                </div>
-            </div>
-        `).join('');
-    } catch (e) {
-        listDiv.innerHTML = "Görevler yüklenirken bir hata oluştu.";
-    }
-}
-async function assignTask() {
-    const title = document.getElementById('task-title').value;
-    const childEmail = document.getElementById('target-child-email').value;
-    const parentId = localStorage.getItem('userId');
-
-    if(!title || !childEmail) return alert("Lütfen tüm alanları doldurun!");
-
-    try {
-        const res = await fetch('/add-task-by-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, childEmail, parentId })
-        });
-        const data = await res.json();
-        
-        if(data.success) {
-            alert("Görev başarıyla gönderildi!");
-            document.getElementById('task-title').value = "";
-            toggleTaskSubSection('view-tasks'); // Otomatik listeye yönlendir
+        if (sub === 'assign-task') {
+            assignDiv.style.display = 'block';
+            viewDiv.style.display = 'none';
+            btnAssign.style.background = "#4f46e5"; btnAssign.style.color = "white";
+            btnView.style.background = "white"; btnView.style.color = "#4f46e5";
+            void assignDiv.offsetWidth; 
+            assignDiv.classList.add('fade-in-section');
         } else {
-            alert("Hata: " + data.error);
+            assignDiv.style.display = 'none';
+            viewDiv.style.display = 'block';
+            btnView.style.background = "#4f46e5"; btnView.style.color = "white";
+            btnAssign.style.background = "white"; btnAssign.style.color = "#4f46e5";
+            loadSentTasks();
+            void viewDiv.offsetWidth; 
+            viewDiv.classList.add('fade-in-section');
         }
-    } catch (e) {
-        alert("Bağlantı hatası!");
     }
-}
-// Ana sayfadaki davet girişini kullanarak mail gönderir
-async function sendInvitationFromHome() {
-    const email = document.getElementById('homeChildEmail').value;
-    if(!email) return alert("Lütfen bir e-posta girin!");
-    
-    // Mevcut sendInvitation fonksiyonunuza veriyi gönderiyoruz
-    document.getElementById('childEmail').value = email; // Gizli senkronizasyon
-    sendInvitation(); 
-    document.getElementById('homeChildEmail').value = ""; // Temizle
-}
+
+    async function loadSentTasks() {
+        const listDiv = document.getElementById('parent-tasks-list');
+        const pId = localStorage.getItem('userId');
+        try {
+            const res = await fetch(`/get-parent-tasks?parentId=${pId}`);
+            const tasks = await res.json();
+            if (tasks.length === 0) {
+                listDiv.innerHTML = "<p>Henüz kimseye görev atamadınız.</p>";
+                return;
+            }
+            listDiv.innerHTML = tasks.map(t => `
+                <div class="child-card" style="margin-bottom: 8px;">
+                    <div>
+                        <strong>${t.task_title}</strong> <br>
+                        <small style="color: #64748b;">Durum: ${t.status === 'completed' ? '✅ Tamamlandı' : '⏳ Bekliyor'}</small>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { listDiv.innerHTML = "Görevler yüklenirken bir hata oluştu."; }
+    }
+
+    async function assignTask() {
+        const title = document.getElementById('task-title').value;
+        const childEmail = document.getElementById('target-child-email').value;
+        const pId = localStorage.getItem('userId');
+
+        if(!title || !childEmail) return alert("Lütfen tüm alanları doldurun!");
+
+        try {
+            const res = await fetch('/add-task-by-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, childEmail, parentId: pId })
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert("Görev başarıyla gönderildi!");
+                document.getElementById('task-title').value = "";
+                toggleTaskSubSection('view-tasks');
+            } else { alert("Hata: " + data.error); }
+        } catch (e) { alert("Bağlantı hatası!"); }
+    }
+
+    async function sendInvitationFromHome() {
+        const email = document.getElementById('homeChildEmail').value;
+        if(!email) return alert("Lütfen bir e-posta girin!");
+        sendInvitation(); 
+        document.getElementById('homeChildEmail').value = "";
+    }
 
     window.onload = () => { if(!parentId) window.location.href = "/index.html"; };
 </script>
