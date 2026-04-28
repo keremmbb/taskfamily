@@ -98,42 +98,35 @@ app.post('/add-task', async (req, res) => {
 app.post('/invite-child', async (req, res) => {
     const { email, parentId } = req.body;
 
-    if (!email || !parentId) {
-        return res.status(400).json({ success: false, message: "E-posta veya ebeveyn bilgisi eksik!" });
+    // 1. BOŞ VERİ KONTROLÜ (Kritik)
+    if (!email || email.trim() === "") {
+        return res.status(400).json({ success: false, message: "E-posta adresi boş olamaz!" });
     }
 
     try {
-        // 1. Veritabanında zaten var mı kontrol et
-        const checkUser = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+        // 2. KAYIT VAR MI KONTROLÜ
+        const checkUser = await db.query("SELECT id FROM users WHERE email = $1", [email]);
         if (checkUser.rows.length > 0) {
-            return res.status(400).json({ success: false, message: "Bu çocuk zaten sisteme kayıtlı!" });
+            return res.status(400).json({ success: false, message: "Bu e-posta adresi sistemde zaten mevcut!" });
         }
 
-        // 2. Veritabanına kaydet (Varsayılan şifre: 123)
+        // 3. KAYIT EKLEME
         await db.query(
             "INSERT INTO users (email, role, parent_id, password) VALUES ($1, 'child', $2, '123')",
             [email, parentId]
         );
 
-        // 3. Mail Gönder
-        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(email)}`;
+        // 4. MAİL GÖNDERME
         try {
-            await sendMail(
-                email,
-                "TaskFamily'e Davet Edildin!",
-                `<h3>Merhaba!</h3>
-                 <p>Ebeveynin seni görev sistemine davet etti.</p>
-                 <p><b>Geçici Şifren:</b> 123</p>
-                 <p><a href="${inviteLink}" style="padding: 10px 20px; background: #4f46e5; color: white; text-decoration: none; border-radius: 5px;">Hesabını Tamamla</a></p>`
-            );
-            res.json({ success: true, message: "Davet ve mail başarıyla gönderildi!" });
+            await sendMail(email, "Davet", "Sisteme davet edildin! Şifren: 123");
+            res.json({ success: true, message: "Çocuk başarıyla eklendi ve mail gönderildi." });
         } catch (mailErr) {
-            console.error("Mail gönderim hatası:", mailErr);
-            res.json({ success: true, message: "Çocuk kaydedildi ancak mail gönderilemedi (Brevo ayarlarınızı kontrol edin)." });
+            res.json({ success: true, message: "Çocuk eklendi ancak mail gönderilirken hata oluştu." });
         }
+
     } catch (err) {
-        console.error("Sistem hatası:", err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error("DAVET HATASI:", err);
+        res.status(500).json({ success: false, message: "Veritabanı hatası: " + err.message });
     }
 });
 app.post('/register', async (req, res) => {
