@@ -19,7 +19,7 @@
         .sidebar li:hover { background: #f1f5f9; }
         .sidebar li.active { background: #eef2ff; color: var(--primary); font-weight: 600; }
         
-        .main-content { background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; min-height: 400px; }
+        .main-content { background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; min-height: 400px; position: relative; }
         
         .content-section { display: none; }
         .content-section.active { display: block; }
@@ -28,7 +28,7 @@
         .logout-btn { padding: 8px 15px; border-radius: 8px; border: 1px solid #ff4757; color: #ff4757; cursor: pointer; background: none; }
         input { padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; width: 100%; }
         
-        /* Fade In Animasyonu */
+        /* Animasyon */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -61,6 +61,16 @@
         .home-card p { font-size: 0.9rem; color: #64748b; line-height: 1.4; }
 
         .action-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; }
+
+        /* Ortalama için özel stil */
+        .centered-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 40px;
+        }
     </style>
 </head>
 <body>
@@ -136,13 +146,15 @@
             </div>
 
             <div id="invite-section" class="content-section">
-                <h2>📩 Öğrenci Davet Et</h2>
-                <p style="color: #64748b; margin-bottom: 20px;">Çocuğunuzun e-posta adresini girerek ona sisteme katılım daveti gönderebilirsiniz.</p>
-                
-                <div style="max-width: 400px; background: #f8fafc; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Çocuğun E-posta Adresi</label>
-                    <input type="email" id="invite-email" placeholder="ornek@mail.com">
-                    <button class="action-btn" onclick="sendInvitation()">Davet Gönder</button>
+                <div class="centered-container">
+                    <h2>📩 Öğrenci Davet Et</h2>
+                    <p style="color: #64748b; margin-bottom: 25px; max-width: 450px;">Çocuğunuzun e-posta adresini girerek ona sisteme katılım daveti gönderebilirsiniz.</p>
+                    
+                    <div style="width: 100%; max-width: 400px; background: #f8fafc; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 600; text-align: left;">Çocuğun E-posta Adresi</label>
+                        <input type="email" id="invite-email" placeholder="ornek@mail.com" style="margin-bottom: 20px;">
+                        <button class="action-btn" onclick="sendInvitation()">Davet Gönder</button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -160,7 +172,6 @@
 
         const target = document.getElementById(sectionId);
         target.style.display = 'block';
-        // Animasyonu tetikle
         void target.offsetWidth; 
         target.classList.add('active', 'fade-in-section');
 
@@ -168,7 +179,30 @@
         element.classList.add('active');
 
         if(sectionId === 'children-section') loadMyChildren();
-        if(sectionId === 'tasks-section') loadSentTasks();
+        if(sectionId === 'tasks-section') {
+            // Görevler kısmına geçince panelleri kapatıp butonları sıfırlayalım
+            document.getElementById('sub-assign-task').style.display = 'none';
+            document.getElementById('sub-view-tasks').style.display = 'none';
+        }
+    }
+
+    function toggleTaskSubSection(sub) {
+        const assignDiv = document.getElementById('sub-assign-task');
+        const viewDiv = document.getElementById('sub-view-tasks');
+        
+        // Önce temizle
+        assignDiv.style.display = 'none';
+        viewDiv.style.display = 'none';
+        assignDiv.classList.remove('fade-in-section');
+        viewDiv.classList.remove('fade-in-section');
+
+        const targetDiv = sub === 'assign-task' ? assignDiv : viewDiv;
+        
+        targetDiv.style.display = 'block';
+        void targetDiv.offsetWidth; // Animasyon tetikleyici
+        targetDiv.classList.add('fade-in-section');
+
+        if(sub === 'view-tasks') loadSentTasks();
     }
 
     async function sendInvitation() {
@@ -187,7 +221,6 @@
         } catch (e) { alert("Hata oluştu."); }
     }
 
-    // Diğer fonksiyonlar (loadMyChildren, assignTask vb.) öncekiyle aynı mantıkta devam eder...
     async function loadMyChildren() {
         const listDiv = document.getElementById('childrenList');
         try {
@@ -201,14 +234,6 @@
                     </div>
                 `).join('');
         } catch (e) { listDiv.innerHTML = "Hata oluştu."; }
-    }
-
-    function toggleTaskSubSection(sub) {
-        const assignDiv = document.getElementById('sub-assign-task');
-        const viewDiv = document.getElementById('sub-view-tasks');
-        assignDiv.style.display = sub === 'assign-task' ? 'block' : 'none';
-        viewDiv.style.display = sub === 'view-tasks' ? 'block' : 'none';
-        if(sub === 'view-tasks') loadSentTasks();
     }
 
     async function loadSentTasks() {
@@ -232,7 +257,12 @@
                 body: JSON.stringify({ title, childEmail, parentId })
             });
             const data = await res.json();
-            if(data.success) { alert("Gönderildi!"); toggleTaskSubSection('view-tasks'); }
+            if(data.success) { 
+                alert("Gönderildi!"); 
+                document.getElementById('task-title').value = "";
+                document.getElementById('target-child-email').value = "";
+                toggleTaskSubSection('view-tasks'); 
+            }
         } catch (e) { alert("Hata."); }
     }
 
