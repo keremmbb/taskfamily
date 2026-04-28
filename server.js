@@ -94,28 +94,46 @@ app.post('/add-task', async (req, res) => {
     }
 });
 // Çocuk Davet Etme Endpoint'i
+// server.js içindeki invite-child kısmını tam olarak bu şekilde güncelle
 app.post('/invite-child', async (req, res) => {
-    // Gelen veriyi kontrol edelim
     const { email, parentId } = req.body;
 
-    // EĞER EMAIL BOŞSA HATAYI BURADA YAKALAYALIM
-    if (!email) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "E-posta adresi sunucuya ulaşmadı! Lütfen formu kontrol edin." 
-        });
+    if (!email || !parentId) {
+        return res.status(400).json({ success: false, message: "E-posta veya ebeveyn bilgisi eksik!" });
     }
 
     try {
-        const result = await db.query(
-            "INSERT INTO users (email, role, parent_id, password) VALUES ($1, 'child', $2, '123') RETURNING id",
+        // 1. Veritabanında zaten var mı kontrol et
+        const checkUser = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (checkUser.rows.length > 0) {
+            return res.status(400).json({ success: false, message: "Bu çocuk zaten sisteme kayıtlı!" });
+        }
+
+        // 2. Veritabanına kaydet (Varsayılan şifre: 123)
+        await db.query(
+            "INSERT INTO users (email, role, parent_id, password) VALUES ($1, 'child', $2, '123')",
             [email, parentId]
         );
-        // ... mail gönderme işlemleri ...
-        res.json({ success: true });
+
+        // 3. Mail Gönder
+        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(email)}`;
+        try {
+            await sendMail(
+                email,
+                "TaskFamily'e Davet Edildin!",
+                `<h3>Merhaba!</h3>
+                 <p>Ebeveynin seni görev sistemine davet etti.</p>
+                 <p><b>Geçici Şifren:</b> 123</p>
+                 <p><a href="${inviteLink}" style="padding: 10px 20px; background: #4f46e5; color: white; text-decoration: none; border-radius: 5px;">Hesabını Tamamla</a></p>`
+            );
+            res.json({ success: true, message: "Davet ve mail başarıyla gönderildi!" });
+        } catch (mailErr) {
+            console.error("Mail gönderim hatası:", mailErr);
+            res.json({ success: true, message: "Çocuk kaydedildi ancak mail gönderilemedi (Brevo ayarlarınızı kontrol edin)." });
+        }
     } catch (err) {
-        console.error("DETAYLI HATA:", err);
-        res.status(500).json({ error: err.message });
+        console.error("Sistem hatası:", err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 app.post('/register', async (req, res) => {
@@ -235,25 +253,19 @@ app.post('/update-child-password', async (req, res) => {
 app.delete('/delete-child/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // Önce bağlı görevleri temizle
         await db.query("DELETE FROM tasks WHERE child_id = $1", [id]);
-        
-        // Sonra kullanıcıyı sil
-        const result = await db.query("DELETE FROM users WHERE id = $1", [id]);
+        const result = await db.query("DELETE FROM users WHERE id = $1 AND role = 'child'", [id]);
         
         if (result.rowCount > 0) {
             res.json({ success: true, message: "Çocuk başarıyla silindi." });
         } else {
-            res.status(404).json({ success: false, message: "Kayıt bulunamadı. ID hatalı olabilir." });
+            res.status(404).json({ success: false, message: "Kayıt bulunamadı." });
         }
     } catch (err) {
-        console.error("Silme hatası:", err);
-        res.status(500).json({ error: "Sunucu tarafında silme hatası." });
+        res.status(500).json({ error: "Silme hatası." });
     }
 });
 db.query('SELECT current_database()').then(res => console.log("Kodun bağlandığı DB:", res.rows[0].current_database));
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Sunucu ${PORT} portunda yayında!`);
-});
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`🚀 Server ${PORT} portunda çalışıyor`));
