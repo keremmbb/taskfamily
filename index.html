@@ -194,46 +194,45 @@
     }
 }
 async function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-        if (!email || !password) {
-            alert("Lütfen tüm alanları doldurun.");
-            return;
-        }
-
-        try {
-            const res = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            
-            const data = await res.json();
-
-            if (data.success) {
-                // Bilgileri yerel hafızaya kaydet
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userEmail', data.email);
-                
-                // isFirstLogin değerini metin (string) olarak kaydediyoruz
-                localStorage.setItem('isFirstLogin', String(data.isFirstLogin));
-
-                if (data.role === 'parent') {
-                    window.location.href = '/dashboard.html';
-                } else {
-                    // Çocuğu görev sayfasına yönlendir
-                    window.location.href = `/child-tasks.html?email=${encodeURIComponent(data.email)}`;
-                }
-            } else {
-                alert(data.message || "Giriş yapılamadı.");
-            }
-        } catch (err) {
-            console.error("Hata:", err);
-            alert("Sunucuya bağlanılamadı.");
-        }
+    if (!email || !password) {
+        alert("Lütfen tüm alanları doldurun.");
+        return;
     }
+
+    try {
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await res.json();
+
+        if (data.success) {
+            // Bilgileri tarayıcıya kaydet
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('userRole', data.role);
+            localStorage.setItem('userEmail', data.email);
+            
+            // isFirstLogin değerini kaydediyoruz (Çocuk paneli uyarısı için)
+            localStorage.setItem('isFirstLogin', String(data.isFirstLogin));
+
+            if (data.role === 'parent') {
+                window.location.href = '/dashboard.html';
+            } else {
+                window.location.href = `/child-tasks.html?email=${encodeURIComponent(data.email)}`;
+            }
+        } else {
+            alert(data.message || "Giriş yapılamadı.");
+        }
+    } catch (err) {
+        console.error("Hata:", err);
+        alert("Sunucuya bağlanılamadı.");
+    }
+}
 
     window.onclick = function(event) {
         const modal = document.getElementById('authModal');

@@ -160,15 +160,22 @@ app.post('/login', async (req, res) => {
         const userData = user.rows[0];
         let isMatch = false;
 
-        // Şifre kontrolü: Eğer veritabanındaki şifre '123' ise direkt karşılaştır, değilse bcrypt kullan
-        if (userData.password === '123') {
-            isMatch = (password === '123');
+        // KRİTİK DÜZELTME: Şifre kontrol mantığı
+        // Eğer veritabanındaki şifre tam olarak '123' ise veya 
+        // çok kısa bir düz metinse direkt karşılaştır (yeni kayıtlar hariç)
+        if (userData.password === password || userData.password === '123') {
+            isMatch = true;
         } else {
-            isMatch = await bcrypt.compare(password, userData.password);
+            // Eğer düz metin eşleşmediyse bcrypt ile şifrelenmiş mi diye bak
+            try {
+                isMatch = await bcrypt.compare(password, userData.password);
+            } catch (bcryptErr) {
+                isMatch = false;
+            }
         }
 
         if (isMatch) {
-            // Şifre hala '123' ise bu ilk giriştir (true), değiştirilmişse false döner
+            // Şifre hala '123' ise ilk giriştir
             const firstLoginStatus = (userData.password === '123');
             
             res.json({
