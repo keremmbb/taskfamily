@@ -80,10 +80,11 @@
     const emailInput = document.getElementById('childEmail');
     if (!emailInput) return;
 
-    const email = emailInput.value.trim();
+    // input'tan değeri al ve boşlukları sil
+    const emailValue = emailInput.value.trim();
     const parentId = localStorage.getItem('userId'); 
 
-    if (!email) {
+    if (!emailValue) {
         alert("Lütfen bir e-posta adresi girin!");
         return;
     }
@@ -93,7 +94,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                email: email, // 'childEmail' değil 'email' olmalı
+                email: emailValue, // BURASI 'email' OLMALI, 'childEmail' DEĞİL!
                 parentId: parentId 
             })
         });
@@ -105,10 +106,11 @@
             emailInput.value = "";
             if (typeof loadMyChildren === "function") loadMyChildren();
         } else {
+            // Sunucudan gelen hata mesajını göster
             alert("❌ Hata: " + (data.message || data.error));
         }
     } catch (err) {
-        alert("Bağlantı hatası!");
+        alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
     }
 }
 async function assignTask() {
