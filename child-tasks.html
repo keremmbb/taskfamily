@@ -158,6 +158,74 @@
             margin-bottom: 20px;
             animation: pulse 2s infinite; /* Dikkat çekmesi için hafif nabız efekti */
         }
+        /* Çıkış Butonu Stili - Sağ Üstte Zarif Bir Görünüm */
+.logout-trigger {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s;
+}
+.logout-trigger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+}
+
+/* Modern Modal (Premium Uyarı Kutusu) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: none; /* Başlangıçta gizli */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+.premium-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    transform: scale(0.9);
+    animation: scaleUp 0.3s forwards;
+}
+
+.premium-modal h3 { margin-bottom: 15px; color: #1e293b; font-size: 20px; }
+.premium-modal p { color: #64748b; margin-bottom: 25px; }
+
+.modal-buttons { display: flex; gap: 15px; justify-content: center; }
+
+.btn-modal {
+    padding: 12px 25px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.btn-cancel { background: #f1f5f9; color: #64748b; }
+.btn-cancel:hover { background: #e2e8f0; }
+
+.btn-logout-confirm { background: #ef4444; color: white; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+.btn-logout-confirm:hover { background: #dc2626; transform: translateY(-2px); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleUp { from { transform: scale(0.9); } to { transform: scale(1); } }
 
 @keyframes pulse {
     0% { transform: scale(1); }
@@ -167,7 +235,18 @@
     </style>
 </head>
 <body>
+<button class="logout-trigger" onclick="toggleLogoutModal(true)">Çıkış Yap</button>
 
+<div id="logoutModal" class="modal-overlay">
+    <div class="premium-modal">
+        <h3>Çıkış Yapılsın mı? 🚪</h3>
+        <p>Görevlerini tamamladın mı? Dinlenmek için çıkış yapabilirsin.</p>
+        <div class="modal-buttons">
+            <button class="btn-modal btn-cancel" onclick="toggleLogoutModal(false)">Vazgeç</button>
+            <button class="btn-modal btn-logout-confirm" onclick="confirmLogout()">Çıkış Yap</button>
+        </div>
+    </div>
+</div>
 <div class="dashboard-container">
     <header>
         <h1>🚀 Merhaba Kahraman!</h1>
@@ -293,6 +372,19 @@
             alert("Şifre en az 4 karakter olmalıdır!");
         }
     }
+    // Modalı açıp kapatan fonksiyon
+function toggleLogoutModal(show) {
+    const modal = document.getElementById('logoutModal');
+    modal.style.display = show ? 'flex' : 'none';
+}
+
+// Gerçek çıkış işlemini yapan fonksiyon
+function confirmLogout() {
+    // Tüm verileri temizle
+    localStorage.clear(); 
+    // Ana sayfaya yönlendir
+    window.location.href = "/index.html"; 
+}
 
     // Sayfa açıldığında görevleri yükle
     window.onload = loadMyTasks;
