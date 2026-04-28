@@ -274,32 +274,53 @@
 
    async function loadMyTasks() {
     const listDiv = document.getElementById('taskList');
-    const email = new URLSearchParams(window.location.search).get('email');
     
+    // E-posta yoksa hata ver
+    if (!childEmail) {
+        listDiv.innerHTML = '<p style="color:white;">Hata: Giriş bilgileri bulunamadı. Lütfen tekrar giriş yapın.</p>';
+        return;
+    }
+
     try {
-        const res = await fetch(`/get-child-tasks?email=${encodeURIComponent(email)}`);
+        console.log("Görevler çekiliyor:", childEmail); // Tarayıcı konsolunda kontrol için
+        const res = await fetch(`/get-child-tasks?email=${encodeURIComponent(childEmail)}`);
+        
+        if (!res.ok) throw new Error("Sunucu hatası");
+        
         const tasks = await res.json();
         
-        if (tasks.length === 0) {
-            listDiv.innerHTML = '<div class="no-tasks">Henüz görev atanmamış. 🎉</div>';
+        if (!tasks || tasks.length === 0) {
+            listDiv.innerHTML = `
+                <div style="text-align:center; color:white; padding:20px;">
+                    <p style="font-size: 1.2rem;">Henüz sana atanmış bir görev yok. 🎉</p>
+                </div>`;
             return;
         }
 
+        // Görevleri listele
         listDiv.innerHTML = tasks.map(t => `
-            <div class="task-card ${t.status === 'completed' ? 'completed-task' : ''}">
-                <div class="task-info">
-                    <div class="task-title">${t.task_title}</div>
-                    <div class="task-status">${t.status === 'completed' ? '✅ Tamamlandı' : '⏳ Devam Ediyor'}</div>
+            <div class="task-card ${t.status === 'completed' ? 'completed-task' : ''}" 
+                 style="background: white; margin: 10px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; color: #1e293b;">
+                <div>
+                    <strong style="display: block; font-size: 1.1rem;">${t.task_title}</strong>
+                    <small style="color: ${t.status === 'completed' ? '#10b981' : '#64748b'};">
+                        ${t.status === 'completed' ? '✅ Tamamlandı' : '⏳ Devam Ediyor'}
+                    </small>
                 </div>
-                <div class="task-action">
+                <div>
                     ${t.status !== 'completed' 
-                        ? `<button class="finish-btn" onclick="completeTask('${t.id}', this)">Bitti</button>` 
-                        : '<span style="color: #10b981; font-weight: bold;">✓</span>'}
+                        ? `<button onclick="completeTask('${t.id}', this)" 
+                             style="background: #6366f1; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                             Bitti
+                           </button>` 
+                        : '<b style="color: #10b981; font-size: 1.2rem;">✓</b>'}
                 </div>
             </div>
         `).join('');
+
     } catch (err) {
-        listDiv.innerHTML = '<p>Görevler yüklenirken hata oluştu.</p>';
+        console.error("Görev yükleme hatası:", err);
+        listDiv.innerHTML = '<p style="color:white;">Görevler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.</p>';
     }
 }
 
@@ -351,10 +372,9 @@
         }
     }
     async function completeTask(taskId, buttonElement) {
-    // 1. Kullanıcıya işlem yapıldığını hissettir
+    // Butonu hemen "bekliyor" moduna al
     buttonElement.disabled = true;
     buttonElement.innerText = "...";
-    buttonElement.style.opacity = "0.5";
 
     try {
         const res = await fetch('/complete-task', {
@@ -366,26 +386,20 @@
         const data = await res.json();
 
         if (data.success) {
-            // 2. Başarılıysa butonu hemen kaldır ve metni değiştir (Sayfa yenilenmesini beklemeden görsel geri bildirim)
-            const parentAction = buttonElement.parentElement;
-            parentAction.innerHTML = '<span style="color: #10b981; font-weight: bold;">✓</span>';
-            
-            // 3. Arka planda listeyi tekrar çekerek verilerin güncelliğinden emin ol
-            setTimeout(() => loadMyTasks(), 500); 
+            // Başarılıysa listeyi hemen yenile
+            await loadMyTasks();
         } else {
             alert("Hata: " + (data.error || "Güncellenemedi"));
             buttonElement.disabled = false;
             buttonElement.innerText = "Bitti";
-            buttonElement.style.opacity = "1";
         }
     } catch (err) {
-        console.error("Hata:", err);
         alert("Bağlantı hatası!");
         buttonElement.disabled = false;
         buttonElement.innerText = "Bitti";
-        buttonElement.style.opacity = "1";
     }
 }
+document.addEventListener('DOMContentLoaded', loadMyTasks);
 </script>
 
 </body>
