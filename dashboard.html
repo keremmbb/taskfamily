@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yönetim Paneli | TaskFamily</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        /* CSS BURAYA YAZILIR */
         :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); }
@@ -12,15 +14,21 @@
         nav { background: white; padding: 1rem 10%; display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
         .dashboard-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; padding: 30px 10%; }
         
+        /* Sidebar Tasarımı */
         .sidebar { background: white; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; height: fit-content; }
-        .sidebar li { list-style: none; padding: 12px; cursor: pointer; border-radius: 8px; color: #64748b; }
+        .sidebar li { list-style: none; padding: 12px; cursor: pointer; border-radius: 8px; color: #64748b; margin-bottom: 5px; transition: 0.3s; }
+        .sidebar li:hover { background: #f1f5f9; }
         .sidebar li.active { background: #eef2ff; color: var(--primary); font-weight: 600; }
         
-        .main-content { background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; }
-        .stat-card { background: #f8fafc; padding: 20px; border-radius: 15px; border-left: 4px solid var(--primary); margin: 20px 0; }
+        .main-content { background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; min-height: 400px; }
         
+        /* Bölümleri başlangıçta gizlemek için */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        .child-card { border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
         .logout-btn { padding: 8px 15px; border-radius: 8px; border: 1px solid #ff4757; color: #ff4757; cursor: pointer; background: none; }
-        .logout-btn:hover { background: #ff4757; color: white; }
+        input { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -33,193 +41,91 @@
     <div class="dashboard-grid">
         <aside class="sidebar">
             <ul>
-                <li class="active">🏠 Özet</li>
-                <li>👶 Çocuklarım</li>
-                <li>📋 Görevler</li>
-                <li>⚙️ Ayarlar</li>
+                <li class="active" onclick="showSection('summary-section', this)">🏠 Özet</li>
+                <li onclick="showSection('children-section', this)">👶 Çocuklarım</li>
+                <li onclick="showSection('tasks-section', this)">📋 Görevler</li>
             </ul>
         </aside>
-
+        
         <main class="main-content">
-            <h2>Hoş Geldiniz! 👋</h2>
-            <p>Ailenizin görev takibi burada başlıyor.</p>
-            
-            <div class="stat-card">
-                <h4>Aktif Görev Sayısı</h4>
-                <p style="font-size: 2rem; font-weight: 800;">0</p>
+            <div id="summary-section" class="content-section active">
+                <h2>Hoş Geldiniz! 👋</h2>
+                <div style="margin-top: 20px; padding: 20px; background: #f0f4ff; border-radius: 12px;">
+                    <h3>👶 Çocuk Davet Et</h3>
+                    <input type="email" id="childEmail" placeholder="Çocuğun E-posta adresi" style="width: 100%; margin-top:10px;">
+                    <button onclick="sendInvitation()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">Davet Gönder</button>
+                </div>
             </div>
-            <div style="margin-top: 20px; padding: 20px; border: 1px dashed #4f46e5; border-radius: 15px;">
-    <h4>📝 Yeni Görev Ata</h4>
-    <input type="text" id="task-title" placeholder="Görev adı (Örn: Ödevini yap)">
-    <input type="email" id="target-child-email" placeholder="Hangi çocuğa? (E-posta)">
-    <button onclick="assignTask()" class="submit-btn" style="width: auto;">Gönder</button>
-</div>
 
-            <button style="background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer;">
-                + Yeni Görev Tanımla
-            </button>
-            <div style="margin-top: 30px;">
-    <h3>📋 Gönderilen Son Görevler</h3>
-    <div id="parent-tasks-list" style="margin-top: 10px;">
-        <p style="color: #64748b;">Henüz görev listelenmedi...</p>
+            <div id="children-section" class="content-section">
+                <h2>👶 Çocuklarım</h2>
+                <div id="childrenList" style="margin-top: 20px;">
+                    <p>Çocuklar yükleniyor...</p>
+                </div>
+            </div>
+
+            <div id="tasks-section" class="content-section">
+                <h2>📋 Görev Ata</h2>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                    <input type="text" id="task-title" placeholder="Görev adı">
+                    <input type="email" id="target-child-email" placeholder="Çocuğun e-postası">
+                    <button onclick="assignTask()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">Görevi Gönder</button>
+                </div>
+                <h3 style="margin-top: 30px;">Son Gönderilenler</h3>
+                <div id="parent-tasks-list"></div>
+            </div>
+        </main>
     </div>
-</div>
-            <div style="margin-top: 30px; padding: 20px; background: #f0f4ff; border-radius: 12px;">
-    <h3>👶 Çocuk Davet Et</h3>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="email" id="childEmail" placeholder="Çocuğun E-posta adresi" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <button onclick="sendInvitation()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">
-            Davet Gönder
-        </button>
-    </div>
-</div>
-</div>
 
 <script>
-   async function sendInvitation() {
-    const emailInput = document.getElementById('childEmail');
-    if (!emailInput) return;
+    const parentId = localStorage.getItem('userId');
 
-    // input'tan değeri al ve boşlukları sil
-    const emailValue = emailInput.value.trim();
-    const parentId = localStorage.getItem('userId'); 
+    // Bölüm değiştirme fonksiyonu (Sidebar çalışması için)
+    function showSection(sectionId, element) {
+        // Tüm bölümleri gizle
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        // Seçilen bölümü göster
+        document.getElementById(sectionId).classList.add('active');
+        // Sidebar linklerini güncelle
+        document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+        element.classList.add('active');
 
-    if (!emailValue) {
-        alert("Lütfen bir e-posta adresi girin!");
-        return;
+        if(sectionId === 'children-section') loadMyChildren();
+        if(sectionId === 'tasks-section') loadSentTasks();
     }
 
-    try {
-        const response = await fetch('/invite-child', {
+    async function loadMyChildren() {
+        const listDiv = document.getElementById('childrenList');
+        try {
+            const res = await fetch(`/get-my-children?parentId=${parentId}`);
+            const children = await res.json();
+            listDiv.innerHTML = children.length === 0 ? "Henüz çocuk yok." : 
+                children.map(c => `
+                    <div class="child-card">
+                        <span>${c.email}</span>
+                        <button onclick="removeChild('${c.id}')" style="color:red; border:none; cursor:pointer;">Sil</button>
+                    </div>
+                `).join('');
+        } catch (e) { listDiv.innerHTML = "Hata oluştu."; }
+    }
+
+    async function sendInvitation() {
+        const email = document.getElementById('childEmail').value;
+        const res = await fetch('/invite-child', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                email: emailValue, // BURASI 'email' OLMALI, 'childEmail' DEĞİL!
-                parentId: parentId 
-            })
-        });
-
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            alert("✅ " + data.message);
-            emailInput.value = "";
-            if (typeof loadMyChildren === "function") loadMyChildren();
-        } else {
-            // Sunucudan gelen hata mesajını göster
-            alert("❌ Hata: " + (data.message || data.error));
-        }
-    } catch (err) {
-        alert("Bağlantı hatası: Sunucuya ulaşılamıyor.");
-    }
-}
-async function assignTask() {
-    const title = document.getElementById('task-title').value;
-    const childEmail = document.getElementById('target-child-email').value;
-    const parentId = localStorage.getItem('userId');
-
-    if(!title || !childEmail || !parentId) return alert("Eksik bilgi!");
-
-    const res = await fetch('/add-task-by-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, childEmail, parentId })
-    });
-    
-    const data = await res.json();
-    if(data.success) {
-        alert("Görev başarıyla iletildi!");
-        document.getElementById('task-title').value = "";
-        loadSentTasks(); 
-    }
-}
-
-    async function loadSentTasks() {
-        try {
-            const res = await fetch('/get-parent-tasks?parentId=1');
-            const tasks = await res.json();
-            
-            const container = document.getElementById('parent-tasks-list');
-            if(!container) return;
-            container.innerHTML = ""; 
-
-            if(tasks.length === 0) {
-                container.innerHTML = '<p style="color: #64748b;">Henüz görev listelenmedi...</p>';
-                return;
-            }
-
-            tasks.forEach(task => {
-                container.innerHTML += `
-                    <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                        <span><strong>${task.task_title}</strong></span>
-                        <span style="padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; background: ${task.status === 'pending' ? '#fff3cd' : '#d1fae5'}; color: ${task.status === 'pending' ? '#856404' : '#065f46'}">
-                            ${task.status === 'pending' ? '⌛ Bekliyor' : '✅ Tamamlandı'}
-                        </span>
-                    </div>
-                `;
-            });
-        } catch (e) { console.error("Görevler yüklenemedi", e); }
-    }
-    async function loadMyChildren() {
-    const parentId = localStorage.getItem('userId');
-    if (!parentId) return;
-
-    try {
-        const response = await fetch(`/get-my-children?parentId=${parentId}`);
-        const children = await response.json();
-
-        const listDiv = document.getElementById('childrenList'); // HTML'de bu ID'li bir div olmalı
-        listDiv.innerHTML = ""; 
-
-        if (children.length === 0) {
-            listDiv.innerHTML = "<p style='color:gray;'>Henüz kayıtlı çocuk bulunmuyor.</p>";
-            return;
-        }
-
-        children.forEach(child => {
-            listDiv.innerHTML += `
-                <div class="child-card" style="border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: white;">
-                    <div>
-                        <strong>${child.username || 'İsimsiz Kahraman'}</strong> <br>
-                        <small style="color: #64748b;">${child.email}</small>
-                    </div>
-                    <div>
-                        <button onclick="openTaskModal('${child.id}', '${child.email}')" style="background: #4f46e5; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Görev Ata</button>
-                        <button onclick="removeChild('${child.id}')" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-left: 5px;">Sil</button>
-                    </div>
-                </div>
-            `;
-        });
-    } catch (e) {
-        console.error("Çocuk listesi yüklenemedi", e);
-    }
-}
-async function removeChild(childId) {
-    if (!confirm("Bu çocuğu ve tüm görevlerini silmek istediğinize emin misiniz?")) return;
-
-    try {
-        const res = await fetch(`/delete-child/${childId}`, {
-            method: 'DELETE'
+            body: JSON.stringify({ email, parentId })
         });
         const data = await res.json();
-        
-        if (data.success) {
-            alert("Çocuk başarıyla silindi.");
-            loadMyChildren(); // Listeyi yenile
-        } else {
-            alert("Hata: " + data.message);
-        }
-    } catch (error) {
-        alert("Silme işlemi sırasında sunucu hatası oluştu.");
+        alert(data.message);
     }
-}
 
-// Sayfa açıldığında fonksiyonu çalıştır
-window.onload = function() {
-    loadMyChildren();
-    // Varsa diğer yükleme fonksiyonların (loadSentTasks vb.)
-};
-    window.onload = loadSentTasks;
+    function logout() {
+        localStorage.clear();
+        window.location.href = "/index.html";
+    }
+
+    window.onload = () => { if(!parentId) window.location.href = "/index.html"; };
 </script>
 </body>
 </html>

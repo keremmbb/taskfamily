@@ -55,17 +55,18 @@ app.get('/child-tasks.html', (req, res) => {
 app.get('/child-register.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'child-register.html'));
 });
+// Velinin eklediği çocukları listeleme API'si
 app.get('/get-my-children', async (req, res) => {
     const { parentId } = req.query;
     try {
         const result = await db.query(
-            "SELECT id, username, email FROM users WHERE parent_id = $1 AND role = 'child'", 
+            "SELECT id, email, role FROM users WHERE parent_id = $1 AND role = 'child'",
             [parentId]
         );
         res.json(result.rows);
     } catch (err) {
-        console.error("Çocuk listeleme hatası:", err);
-        res.status(500).json({ error: "Çocuklar listelenemedi." });
+        console.error("Çocuk listesi getirme hatası:", err);
+        res.status(500).json({ success: false, message: "Çocuklar yüklenemedi." });
     }
 });
 // server.js içine ekle
