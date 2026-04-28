@@ -357,6 +357,34 @@
             toggleLogoutModal(false);
         }
     }
+    async function completeTask(taskId, buttonElement) {
+    // Butonu geçici olarak devre dışı bırak ve yükleniyor efekti ver
+    buttonElement.disabled = true;
+    const originalText = buttonElement.innerText;
+    buttonElement.innerText = "...";
+
+    try {
+        const res = await fetch('/complete-task', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId })
+        });
+
+        if (res.ok) {
+            // Başarılıysa listeyi yeniden yükle (Bitti butonu kaybolacak, yerine Tamamlandı yazacak)
+            await loadMyTasks();
+        } else {
+            alert("Görev güncellenemedi.");
+            buttonElement.disabled = false;
+            buttonElement.innerText = originalText;
+        }
+    } catch (err) {
+        console.error("Hata:", err);
+        alert("Bağlantı hatası oluştu.");
+        buttonElement.disabled = false;
+        buttonElement.innerText = originalText;
+    }
+}
 </script>
 
 </body>
