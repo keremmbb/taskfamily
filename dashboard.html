@@ -37,6 +37,47 @@
 .fade-in-section {
     animation: fadeIn 0.5s ease-out forwards;
 }
+/* Ana Sayfa Kart Düzeni */
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.home-card {
+    padding: 25px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.home-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+}
+
+.home-card i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.home-card h3 {
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.home-card p {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.4;
+}
     </style>
 </head>
 <body>
@@ -57,13 +98,30 @@
         
         <main class="main-content">
             <div id="summary-section" class="content-section active">
-                <h2>Hoş Geldiniz! 👋</h2>
-                <div style="margin-top: 20px; padding: 20px; background: #f0f4ff; border-radius: 12px;">
-                    <h3>👶 Çocuk Davet Et</h3>
-                    <input type="email" id="childEmail" placeholder="Çocuğun E-posta adresi" style="width: 100%; margin-top:10px;">
-                    <button onclick="sendInvitation()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">Davet Gönder</button>
-                </div>
-            </div>
+    <h2>Yönetim Paneli Ana Sayfa 👋</h2>
+    <p style="color: #64748b;">Hızlı erişim butonlarını kullanarak işlemlerinizi gerçekleştirebilirsiniz.</p>
+
+    <div class="home-grid">
+        <div class="home-card" onclick="showSection('children-section', document.querySelector('.sidebar li:nth-child(2)'))">
+            <span>👶</span>
+            <h3>Çocuklarım</h3>
+            <p>Sisteme kayıtlı çocuklarınızı listeleyin, yenilerini ekleyin veya mevcut olanları yönetin.</p>
+        </div>
+
+        <div class="home-card" onclick="showSection('tasks-section', document.querySelector('.sidebar li:nth-child(3)'))">
+            <span>📋</span>
+            <h3>Görev Yönetimi</h3>
+            <p>Çocuklarınıza yeni görevler atayın veya daha önce verdiğiniz görevlerin durumunu takip edin.</p>
+        </div>
+
+        <div class="home-card" style="cursor: default; border-style: dashed;">
+            <span>📩</span>
+            <h3>Hızlı Davet</h3>
+            <input type="email" id="homeChildEmail" placeholder="E-posta adresi" style="width: 100%; margin: 10px 0; padding: 8px;">
+            <button onclick="sendInvitationFromHome()" style="background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; width: 100%;">Davet Gönder</button>
+        </div>
+    </div>
+</div>
 
             <div id="children-section" class="content-section">
                 <h2>👶 Çocuklarım</h2>
@@ -232,6 +290,16 @@ async function assignTask() {
     } catch (e) {
         alert("Bağlantı hatası!");
     }
+}
+// Ana sayfadaki davet girişini kullanarak mail gönderir
+async function sendInvitationFromHome() {
+    const email = document.getElementById('homeChildEmail').value;
+    if(!email) return alert("Lütfen bir e-posta girin!");
+    
+    // Mevcut sendInvitation fonksiyonunuza veriyi gönderiyoruz
+    document.getElementById('childEmail').value = email; // Gizli senkronizasyon
+    sendInvitation(); 
+    document.getElementById('homeChildEmail').value = ""; // Temizle
 }
 
     window.onload = () => { if(!parentId) window.location.href = "/index.html"; };
