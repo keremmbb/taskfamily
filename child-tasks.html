@@ -270,17 +270,25 @@
     const urlParams = new URLSearchParams(window.location.search);
     let childEmail = urlParams.get('email') || localStorage.getItem('userEmail');
     window.onload = function() {
-    loadMyTasks(); // Mevcut görev yükleme fonksiyonun
+    // 1. Önce görevleri yükle (Senin mevcut fonksiyonun)
+    if (typeof loadMyTasks === "function") {
+        loadMyTasks();
+    }
     
-    // Tarayıcı hafızasını kontrol et
+    // 2. Tarayıcı hafızasındaki 'isFirstLogin' değerini oku
     const isFirstLogin = localStorage.getItem('isFirstLogin');
     
-    // Uyarı kutusunu bul
+    // 3. Uyarı kutusu elementini bul
     const alertBox = document.getElementById('setup-alert');
     
-    // Eğer isFirstLogin 'false' ise (yani şifre değişmişse) kutuyu gizle
+    // MANTIKSAL KONTROL: Eğer değer 'false' ise kutuyu gizle
+    // 'false' string olarak gelir çünkü localStorage string tutar
     if (isFirstLogin === 'false' && alertBox) {
         alertBox.style.display = 'none';
+        console.log("Kullanıcı eski, uyarı kutusu gizlendi.");
+    } else if (alertBox) {
+        alertBox.style.display = 'flex'; // Şifre 123 ise göster
+        console.log("Kullanıcı yeni, uyarı kutusu gösteriliyor.");
     }
 };
 
