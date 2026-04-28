@@ -98,7 +98,7 @@ app.post('/add-task', async (req, res) => {
 app.post('/invite-child', async (req, res) => {
     const { email, parentId } = req.body;
 
-    // 1. BOŞ VERİ KONTROLÜ (Kritik)
+    // 1. BOŞ VERİ KONTROLÜ
     if (!email || email.trim() === "") {
         return res.status(400).json({ success: false, message: "E-posta adresi boş olamaz!" });
     }
@@ -116,12 +116,38 @@ app.post('/invite-child', async (req, res) => {
             [email, parentId]
         );
 
-        // 4. MAİL GÖNDERME
+        // 4. MAİL İÇERİĞİNİ HAZIRLAMA (Link burada oluşturuluyor)
+        const inviteLink = `https://taskfamily-app.onrender.com/child-register.html?email=${encodeURIComponent(email)}`;
+
+        const mailContent = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 500px; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #4f46e5; text-align: center;">TaskFamily'e Hoş Geldin! 🚀</h2>
+                <p>Merhaba,</p>
+                <p>Ebeveynin seni aile görev sistemimize davet etti. Artık sana verilen görevleri takip edebilir ve ödülleri toplayabilirsin!</p>
+                
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0;"><b>Geçici Şifren:</b> <span style="font-size: 18px; color: #e11d48;">123</span></p>
+                    <small>(Giriş yaptıktan sonra şifreni değiştirmeyi unutma!)</small>
+                </div>
+
+                <p style="text-align: center;">
+                    <a href="${inviteLink}" style="display: inline-block; padding: 12px 25px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Hesabımı Tamamla ve Giriş Yap</a>
+                </p>
+
+                <p style="font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">
+                    Eğer yukarıdaki buton çalışmıyorsa şu bağlantıyı tarayıcına yapıştır:<br>
+                    <a href="${inviteLink}" style="color: #4f46e5;">${inviteLink}</a>
+                </p>
+            </div>
+        `;
+
+        // 5. MAİL GÖNDERME
         try {
-            await sendMail(email, "Davet", "Sisteme davet edildin! Şifren: 123");
-            res.json({ success: true, message: "Çocuk başarıyla eklendi ve mail gönderildi." });
+            await sendMail(email, "Sana Bir Davet Var! 🎁", mailContent);
+            res.json({ success: true, message: "Çocuk başarıyla eklendi ve davet maili gönderildi." });
         } catch (mailErr) {
-            res.json({ success: true, message: "Çocuk eklendi ancak mail gönderilirken hata oluştu." });
+            console.error("Mail gönderim hatası:", mailErr);
+            res.json({ success: true, message: "Çocuk eklendi ancak mail gönderilirken bir sorun oluştu. Lütfen şifresini (123) sözlü olarak iletin." });
         }
 
     } catch (err) {
