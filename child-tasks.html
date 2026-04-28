@@ -11,7 +11,8 @@
             --success: #10b981;
             --warning: #f59e0b;
             --bg: #f0f2f5;
-            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #1e293b;
         }
 
         body {
@@ -21,110 +22,146 @@
             margin: 0;
             padding: 20px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
         }
 
-        .dashboard-container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
-        header {
+        /* Üst Header Alanı */
+        .page-header {
             text-align: center;
-            margin-bottom: 30px;
+            color: white;
+            margin-bottom: 40px;
+            margin-top: 20px;
         }
 
-        h1 {
-            color: #2d3748;
-            font-size: 1.8rem;
-            margin: 0;
+        /* Ana Menü Kartı (Görevlerim Butonu) */
+        .menu-grid {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
         }
 
-        .subtitle {
-            color: #718096;
-            font-size: 0.9rem;
+        .action-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            border: 3px solid transparent;
         }
 
-        /* Ünlem/Uyarı Alanı */
-        #setup-alert {
-            display: none;
-            background: #fff3cd;
-            border-left: 6px solid #ffc107;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            animation: slideIn 0.5s ease;
+        .action-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--primary);
+            background: white;
         }
 
-        .alert-content {
+        .action-card .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: #eef2ff;
+            border-radius: 50%;
             display: flex;
             align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+        }
+
+        /* Modern Modal (Pencere) Tasarımı */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .task-modal {
+            background: #f8fafc;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            border-radius: 32px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalSlideUp 0.4s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 25px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
-        .alert-btn {
-            background: #ffc107;
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .close-modal {
+            background: #f1f5f9;
             border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-weight: 600;
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.2s;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
         }
 
-        .alert-btn:hover { transform: scale(1.05); }
+        .close-modal:hover { background: #fee2e2; color: #ef4444; }
 
-        /* Görev Kartları */
+        /* Görev Kartları (Pencere İçindekiler) */
         .task-card {
             background: white;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s ease;
             border: 1px solid #edf2f7;
+            transition: 0.2s;
         }
 
-        .task-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-
-        .task-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .task-icon {
-            font-size: 1.5rem;
-            background: #f7fafc;
-            padding: 10px;
-            border-radius: 12px;
-        }
-
-        .task-title {
-            font-weight: 600;
-            color: #2d3748;
-        }
+        .task-info { display: flex; align-items: center; gap: 12px; }
+        .task-icon { font-size: 24px; }
+        .task-title { font-weight: 600; color: var(--text-dark); }
 
         .done-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.3s;
         }
 
         .done-btn.completed {
@@ -132,201 +169,123 @@
             cursor: default;
         }
 
-        .done-btn:not(.completed):hover {
-            background: #4f46e5;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        /* Çıkış ve Şifre Uyarıları */
+        .logout-trigger {
+            position: fixed; top: 20px; right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white; border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 18px; border-radius: 12px; cursor: pointer;
+            backdrop-filter: blur(5px); font-weight: 600;
         }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Boş durum mesajı */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #a0aec0;
-        }
         #setup-alert {
-            display: none; /* Başlangıçta gizli, JS ile açacağız */
-            background: #fee2e2;
-            border: 2px solid #ef4444;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 12px;
+            display: none;
+            background: #fffbeb;
+            border: 2px solid #fbbf24;
+            padding: 15px 25px;
+            border-radius: 20px;
             margin-bottom: 20px;
-            animation: pulse 2s infinite; /* Dikkat çekmesi için hafif nabız efekti */
+            max-width: 400px;
+            width: 100%;
+            animation: pulse 2s infinite;
         }
-        /* Çıkış Butonu Stili - Sağ Üstte Zarif Bir Görünüm */
-.logout-trigger {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 15px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s;
-}
-.logout-trigger:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: #ef4444;
-}
 
-/* Modern Modal (Premium Uyarı Kutusu) */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    display: none; /* Başlangıçta gizli */
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    animation: fadeIn 0.3s ease;
-}
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
 
-.premium-modal {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    transform: scale(0.9);
-    animation: scaleUp 0.3s forwards;
-}
-
-.premium-modal h3 { margin-bottom: 15px; color: #1e293b; font-size: 20px; }
-.premium-modal p { color: #64748b; margin-bottom: 25px; }
-
-.modal-buttons { display: flex; gap: 15px; justify-content: center; }
-
-.btn-modal {
-    padding: 12px 25px;
-    border-radius: 12px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex: 1;
-}
-
-.btn-cancel { background: #f1f5f9; color: #64748b; }
-.btn-cancel:hover { background: #e2e8f0; }
-
-.btn-logout-confirm { background: #ef4444; color: white; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
-.btn-logout-confirm:hover { background: #dc2626; transform: translateY(-2px); }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleUp { from { transform: scale(0.9); } to { transform: scale(1); } }
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-}
+        .alert-btn {
+            background: #fbbf24; border: none; padding: 8px 15px;
+            border-radius: 10px; font-weight: 700; cursor: pointer; margin-left: 10px;
+        }
     </style>
 </head>
 <body>
+
 <button class="logout-trigger" onclick="toggleLogoutModal(true)">Çıkış Yap</button>
 
-<div id="logoutModal" class="modal-overlay">
-    <div class="premium-modal">
-        <h3>Çıkış Yapılsın mı? 🚪</h3>
-        <p>Görevlerini tamamladın mı? Dinlenmek için çıkış yapabilirsin.</p>
-        <div class="modal-buttons">
-            <button class="btn-modal btn-cancel" onclick="toggleLogoutModal(false)">Vazgeç</button>
-            <button class="btn-modal btn-logout-confirm" onclick="confirmLogout()">Çıkış Yap</button>
+<div class="page-header">
+    <h1 style="font-size: 2.5rem; margin-bottom: 10px;">TaskFamily</h1>
+    <p style="opacity: 0.9;">Hoş geldin Kahraman, bugün neler yapıyoruz?</p>
+</div>
+
+<div id="setup-alert">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="color: #92400e; font-weight: 600;">🔑 Şifreni belirlemelisin!</span>
+        <button class="alert-btn" onclick="updatePassword()">Şimdi Yap</button>
+    </div>
+</div>
+
+<div class="menu-grid">
+    <div class="action-card" onclick="openTasksModal()">
+        <div class="icon-circle">📋</div>
+        <h2 style="margin: 0; color: #1e293b;">Görevlerim</h2>
+        <p style="color: #64748b; margin-top: 10px;">Sana verilen işleri listele ve tamamla.</p>
+    </div>
+</div>
+
+<div id="tasksModal" class="modal-overlay">
+    <div class="task-modal">
+        <div class="modal-header">
+            <h2 style="margin: 0; font-size: 22px;">🎯 Günlük Görevlerin</h2>
+            <button class="close-modal" onclick="closeTasksModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="tasks-container">
+            <div style="text-align: center; padding: 20px; color: #94a3b8;">Yükleniyor...</div>
         </div>
     </div>
 </div>
-<div class="dashboard-container">
-    <header>
-        <h1>🚀 Merhaba Kahraman!</h1>
-        <p class="subtitle">Bugün hangi görevleri tamamlayacaksın?</p>
-    </header>
 
-    <div id="setup-alert">
-        <div class="alert-content">
-            <span>⚠️ <strong>Hesabını Tanımla:</strong> Lütfen kendi şifreni oluştur.</span>
-            <button class="alert-btn" onclick="updatePassword()">Şifre Belirle</button>
+<div id="logoutModal" class="modal-overlay">
+    <div style="background: white; padding: 30px; border-radius: 24px; text-align: center; max-width: 350px;">
+        <h3 style="margin-top: 0;">Çıkış Yapılsın mı? 🚪</h3>
+        <p style="color: #64748b;">Dinlenmek için ayrılıyorsun, görüşmek üzere!</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="toggleLogoutModal(false)" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #f1f5f9; cursor: pointer; font-weight: 600;">Vazgeç</button>
+            <button onclick="confirmLogout()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #ef4444; color: white; cursor: pointer; font-weight: 600;">Çıkış Yap</button>
         </div>
-    </div>
-
-    <div id="tasks-container">
-        <div class="empty-state">Görevlerin yükleniyor...</div>
     </div>
 </div>
 
 <script>
-    const isFirstLogin = localStorage.getItem('isFirstLogin');
     const urlParams = new URLSearchParams(window.location.search);
     let childEmail = urlParams.get('email') || localStorage.getItem('userEmail');
+
     window.onload = function() {
-    // 1. Önce görevleri yükle (Senin mevcut fonksiyonun)
-    if (typeof loadMyTasks === "function") {
-        loadMyTasks();
+        checkAlertStatus();
+    };
+
+    function checkAlertStatus() {
+        const isFirst = localStorage.getItem('isFirstLogin');
+        const alertBox = document.getElementById('setup-alert');
+        if (isFirst === 'false') {
+            alertBox.style.display = 'none';
+        } else {
+            alertBox.style.display = 'block';
+        }
     }
-    
-    // 2. Tarayıcı hafızasındaki 'isFirstLogin' değerini oku
-    const isFirstLogin = localStorage.getItem('isFirstLogin');
-    
-    // 3. Uyarı kutusu elementini bul
-    const alertBox = document.getElementById('setup-alert');
-    
-    // MANTIKSAL KONTROL: Eğer değer 'false' ise kutuyu gizle
-    // 'false' string olarak gelir çünkü localStorage string tutar
-    if (isFirstLogin === 'false' && alertBox) {
-        alertBox.style.display = 'none';
-        console.log("Kullanıcı eski, uyarı kutusu gizlendi.");
-    } else if (alertBox) {
-        alertBox.style.display = 'flex'; // Şifre 123 ise göster
-        console.log("Kullanıcı yeni, uyarı kutusu gösteriliyor.");
+
+    async function openTasksModal() {
+        document.getElementById('tasksModal').style.display = 'flex';
+        await loadMyTasks();
     }
-};
+
+    function closeTasksModal() {
+        document.getElementById('tasksModal').style.display = 'none';
+    }
 
     async function loadMyTasks() {
-        // İlk giriş uyarısı kontrolü: Hafızada isFirstLogin 'true' ise kutuyu göster
-        const isFirstLogin = localStorage.getItem('isFirstLogin');
-        const alertBox = document.getElementById('setup-alert');
+        const container = document.getElementById('tasks-container');
         
-        if (isFirstLogin === 'true') {
-            alertBox.style.display = 'block';
-        } else {
-            alertBox.style.display = 'none';
-        }
-
-        // Eğer e-posta gelmemişse hata ver ve giriş sayfasına yönlendir
-        if (!childEmail) {
-            document.body.innerHTML = `
-                <div class='dashboard-container' style='text-align:center;'>
-                    <h1>Hata: Giriş bilgisi eksik!</h1>
-                    <p>Lütfen <a href="/index.html">buraya tıklayarak</a> tekrar giriş yapın.</p>
-                </div>`;
-            return;
-        }
-
         try {
-            // E-posta adresiyle görevleri çekiyoruz
             const res = await fetch(`/get-child-tasks?email=${encodeURIComponent(childEmail)}`);
-            if (!res.ok) throw new Error("Veriler alınamadı");
-            
             const tasks = await res.json();
-            const container = document.getElementById('tasks-container');
+            
             container.innerHTML = "";
 
-            if(tasks.length === 0) {
+            if (tasks.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 50px;">🎉</div>
-                        <p>Tüm görevler bitti veya henüz atanmadı.<br>Keyfine bak kahraman!</p>
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
+                        <p style="color: #64748b; font-weight: 600;">Henüz görevin yok!<br>Keyfine bak kahraman.</p>
                     </div>`;
                 return;
             }
@@ -340,78 +299,65 @@
                             <div class="task-title">${task.task_title}</div>
                         </div>
                         <button class="${isDone ? 'done-btn completed' : 'done-btn'}" 
-                                onclick="${isDone ? '' : `markAsDone(${task.id})`}">
-                            ${isDone ? '✅ Bitti!' : 'Tamamladım'}
+                                onclick="${isDone ? '' : `markAsDone(${task.id}, this)`}">
+                            ${isDone ? '✅' : 'Bitti'}
                         </button>
                     </div>
                 `;
             });
         } catch (err) {
-            console.error("Yükleme hatası:", err);
-            document.getElementById('tasks-container').innerHTML = "<p>Görevler yüklenirken bir sorun oluştu.</p>";
+            container.innerHTML = "<p style='color:red; text-align:center;'>Görevler yüklenemedi.</p>";
         }
     }
 
-    async function markAsDone(taskId) {
-        event.target.innerText = "Bekle...";
-        const res = await fetch('/complete-task', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId })
-        });
-        if(res.ok) loadMyTasks();
+    async function markAsDone(taskId, btn) {
+        btn.innerText = "...";
+        try {
+            const res = await fetch('/complete-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId })
+            });
+            if (res.ok) await loadMyTasks();
+        } catch (err) { alert("Hata oluştu."); }
     }
 
     async function updatePassword() {
-    const newPass = prompt("Lütfen yeni ve güvenli bir şifre belirleyin:");
-    
-    if (newPass && newPass.length >= 4) {
+        const newPass = prompt("Lütfen yeni şifreni gir (en az 4 karakter):");
+        if (!newPass || newPass.length < 4) return alert("Şifre çok kısa!");
+
         try {
             const res = await fetch('/update-child-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    email: childEmail, 
-                    newPassword: newPass 
-                })
+                body: JSON.stringify({ email: childEmail, newPassword: newPass })
             });
-            
             const data = await res.json();
-            
             if (data.success) {
-                alert("Harika! Şifren başarıyla değiştirildi.");
-                
-                // KRİTİK NOKTA: Hafızada bu kişinin artık yeni olmadığını işaretle
-                localStorage.setItem('isFirstLogin', 'false'); 
-                
-                // Uyarıyı ekrandan kaldır
-                document.getElementById('setup-alert').style.display = 'none';
-            } else {
-                alert("Hata: " + data.message);
+                alert("Şifre güncellendi!");
+                localStorage.setItem('isFirstLogin', 'false');
+                checkAlertStatus();
             }
-        } catch (err) {
-            alert("Sunucu bağlantı hatası.");
-        }
-    } else {
-        alert("Şifre en az 4 karakter olmalıdır!");
+        } catch (err) { alert("Bağlantı hatası!"); }
     }
-}
-    // Modalı açıp kapatan fonksiyon
-function toggleLogoutModal(show) {
-    const modal = document.getElementById('logoutModal');
-    modal.style.display = show ? 'flex' : 'none';
-}
 
-// Gerçek çıkış işlemini yapan fonksiyon
-function confirmLogout() {
-    // Tüm verileri temizle
-    localStorage.clear(); 
-    // Ana sayfaya yönlendir
-    window.location.href = "/index.html"; 
-}
+    function toggleLogoutModal(show) {
+        document.getElementById('logoutModal').style.display = show ? 'flex' : 'none';
+    }
 
-    // Sayfa açıldığında görevleri yükle
-    window.onload = loadMyTasks;
+    function confirmLogout() {
+        localStorage.clear();
+        window.location.href = "/index.html";
+    }
+
+    // Modal dışına tıklayınca kapatma
+    window.onclick = function(e) {
+        if (e.target.className === 'modal-overlay') {
+            closeTasksModal();
+            toggleLogoutModal(false);
+        }
+    }
 </script>
+
 </body>
 </html>
