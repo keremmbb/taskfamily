@@ -29,6 +29,14 @@
         .child-card { border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
         .logout-btn { padding: 8px 15px; border-radius: 8px; border: 1px solid #ff4757; color: #ff4757; cursor: pointer; background: none; }
         input { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+        @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-section {
+    animation: fadeIn 0.5s ease-out forwards;
+}
     </style>
 </head>
 <body>
@@ -68,28 +76,19 @@
     <h2>📋 Görev Yönetimi</h2>
     
     <div style="display: flex; gap: 20px; margin: 20px 0;">
-        <button onclick="toggleTaskSubSection('view-tasks')" style="flex: 1; padding: 20px; border-radius: 15px; border: 2px solid #4f46e5; background: white; cursor: pointer; font-weight: 600; color: #4f46e5;">
-            🔍 Görevlerim (Verilen Görevler)
-        </button>
-        <button onclick="toggleTaskSubSection('assign-task')" style="flex: 1; padding: 20px; border-radius: 15px; border: none; background: #4f46e5; cursor: pointer; font-weight: 600; color: white;">
-            ➕ Görev Ata
-        </button>
+    <button id="btn-view" onclick="toggleTaskSubSection('view-tasks')" style="flex: 1; padding: 20px; border-radius: 15px; border: 2px solid #4f46e5; background: white; cursor: pointer; font-weight: 600; color: #4f46e5; transition: 0.3s;">
+        🔍 Görevlerim (Verilen Görevler)
+    </button>
+    <button id="btn-assign" onclick="toggleTaskSubSection('assign-task')" style="flex: 1; padding: 20px; border-radius: 15px; border: none; background: #4f46e5; cursor: pointer; font-weight: 600; color: white; transition: 0.3s;">
+        ➕ Görev Ata
+    </button>
+</div>
+
+<div id="sub-assign-task" class="fade-in-section" style="display: none; background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0;">
     </div>
 
-    <div id="sub-assign-task" style="display: none; background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0;">
-        <h3>Yeni Görev Oluştur</h3>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-            <input type="text" id="task-title" placeholder="Görev adı (örn: Odanı topla)">
-            <input type="email" id="target-child-email" placeholder="Çocuğun e-postası">
-            <button onclick="assignTask()" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;">Görevi Gönder</button>
-        </div>
+<div id="sub-view-tasks" class="fade-in-section" style="display: none; margin-top: 20px;">
     </div>
-
-    <div id="sub-view-tasks" style="display: none; margin-top: 20px;">
-        <h3>Son Gönderilen Görevler</h3>
-        <div id="parent-tasks-list" style="margin-top: 15px;">
-            <p style="color: #64748b;">Yükleniyor...</p>
-        </div>
     </div>
 </div>
 
@@ -140,17 +139,38 @@
         localStorage.clear();
         window.location.href = "/index.html";
     }
-    function toggleTaskSubSection(sub) {
+   function toggleTaskSubSection(sub) {
     const assignDiv = document.getElementById('sub-assign-task');
     const viewDiv = document.getElementById('sub-view-tasks');
+    const btnAssign = document.getElementById('btn-assign');
+    const btnView = document.getElementById('btn-view');
+
+    // Animasyonu sıfırlamak için sınıfları önce çıkarıp sonra ekleyeceğiz
+    assignDiv.classList.remove('fade-in-section');
+    viewDiv.classList.remove('fade-in-section');
 
     if (sub === 'assign-task') {
         assignDiv.style.display = 'block';
         viewDiv.style.display = 'none';
+        
+        // Buton stillerini değiştir (aktif/pasif görünümü)
+        btnAssign.style.background = "#4f46e5"; btnAssign.style.color = "white";
+        btnView.style.background = "white"; btnView.style.color = "#4f46e5";
+        
+        // Animasyonu tetikle
+        void assignDiv.offsetWidth; // Reflow: Tarayıcıyı değişikliği fark etmeye zorlar
+        assignDiv.classList.add('fade-in-section');
     } else {
         assignDiv.style.display = 'none';
         viewDiv.style.display = 'block';
-        loadSentTasks(); // Görevleri listele
+        
+        btnView.style.background = "#4f46e5"; btnView.style.color = "white";
+        btnAssign.style.background = "white"; btnAssign.style.color = "#4f46e5";
+
+        loadSentTasks();
+        
+        void viewDiv.offsetWidth; 
+        viewDiv.classList.add('fade-in-section');
     }
 }
 async function loadSentTasks() {
