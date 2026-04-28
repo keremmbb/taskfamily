@@ -170,24 +170,24 @@
         const data = await res.json();
 
         if (data.success) { 
-            // Bilgileri tarayıcıya kaydet
-            localStorage.setItem('userId', data.userId); 
-            localStorage.setItem('userRole', data.role);
-            localStorage.setItem('userEmail', data.email);
-            localStorage.setItem('isFirstLogin', data.isFirstLogin)
+    // Bilgileri tarayıcıya kaydet
+    localStorage.setItem('userId', data.userId); 
+    localStorage.setItem('userRole', data.role);
+    localStorage.setItem('userEmail', data.email);
+    
+    // String olarak 'true' veya 'false' kaydediyoruz (Kontrol kolaylığı için)
+    localStorage.setItem('isFirstLogin', String(data.isFirstLogin));
 
-            alert("Giriş başarılı! Yönlendiriliyorsunuz...");
-            
-            if (data.role === 'parent') {
-                window.location.href = '/dashboard.html';
-            } else {
-                // Çocuğu mail parametresiyle birlikte gönderiyoruz
-                window.location.href = `/child-tasks.html?email=${encodeURIComponent(data.email)}`;
-            }
-        } else { 
-            // 401 hatası aldığında buradaki mesaj görünür
-            alert(data.message || "E-posta veya şifre hatalı!"); 
-        }
+    alert("Giriş başarılı! Yönlendiriliyorsunuz...");
+    
+    if (data.role === 'parent') {
+        window.location.href = '/dashboard.html';
+    } else {
+        window.location.href = `/child-tasks.html?email=${encodeURIComponent(data.email)}`;
+    }
+} else { 
+    alert(data.message || "E-posta veya şifre hatalı!"); 
+}
     } catch (error) {
         console.error("Login hatası:", error);
         alert("Sunucuya bağlanırken bir hata oluştu.");

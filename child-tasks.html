@@ -269,6 +269,20 @@
     const isFirstLogin = localStorage.getItem('isFirstLogin');
     const urlParams = new URLSearchParams(window.location.search);
     let childEmail = urlParams.get('email') || localStorage.getItem('userEmail');
+    window.onload = function() {
+    loadMyTasks(); // Mevcut görev yükleme fonksiyonun
+    
+    // Tarayıcı hafızasını kontrol et
+    const isFirstLogin = localStorage.getItem('isFirstLogin');
+    
+    // Uyarı kutusunu bul
+    const alertBox = document.getElementById('setup-alert');
+    
+    // Eğer isFirstLogin 'false' ise (yani şifre değişmişse) kutuyu gizle
+    if (isFirstLogin === 'false' && alertBox) {
+        alertBox.style.display = 'none';
+    }
+};
 
     async function loadMyTasks() {
         // İlk giriş uyarısı kontrolü: Hafızada isFirstLogin 'true' ise kutuyu göster
@@ -341,37 +355,39 @@
     }
 
     async function updatePassword() {
-        const newPass = prompt("Lütfen yeni ve güvenli bir şifre belirleyin:");
-        
-        if (newPass && newPass.length >= 4) {
-            try {
-                const res = await fetch('/update-child-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        email: childEmail, 
-                        newPassword: newPass 
-                    })
-                });
+    const newPass = prompt("Lütfen yeni ve güvenli bir şifre belirleyin:");
+    
+    if (newPass && newPass.length >= 4) {
+        try {
+            const res = await fetch('/update-child-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: childEmail, 
+                    newPassword: newPass 
+                })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                alert("Harika! Şifren başarıyla değiştirildi.");
                 
-                const data = await res.json();
+                // KRİTİK NOKTA: Hafızada bu kişinin artık yeni olmadığını işaretle
+                localStorage.setItem('isFirstLogin', 'false'); 
                 
-                if (data.success) {
-                    alert("Harika! Şifren başarıyla değiştirildi.");
-                    
-                    // KRİTİK: Hafızayı güncelle ve kutuyu kapat
-                    localStorage.setItem('isFirstLogin', 'false'); 
-                    document.getElementById('setup-alert').style.display = 'none';
-                } else {
-                    alert("Bir hata oluştu: " + (data.error || data.message));
-                }
-            } catch (err) {
-                alert("Sunucuya bağlanılamadı.");
+                // Uyarıyı ekrandan kaldır
+                document.getElementById('setup-alert').style.display = 'none';
+            } else {
+                alert("Hata: " + data.message);
             }
-        } else {
-            alert("Şifre en az 4 karakter olmalıdır!");
+        } catch (err) {
+            alert("Sunucu bağlantı hatası.");
         }
+    } else {
+        alert("Şifre en az 4 karakter olmalıdır!");
     }
+}
     // Modalı açıp kapatan fonksiyon
 function toggleLogoutModal(show) {
     const modal = document.getElementById('logoutModal');

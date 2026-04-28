@@ -255,18 +255,16 @@ app.post('/complete-task', async (req, res) => {
 app.post('/update-child-password', async (req, res) => {
     const { email, newPassword } = req.body;
     try {
-        // Şifreyi güvenli hale getirmek için bcrypt ile şifreliyoruz
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        
         await db.query(
             "UPDATE users SET password = $1 WHERE email = $2 AND role = 'child'",
             [hashedPassword, email]
         );
         
-        res.json({ success: true, message: "Şifre başarıyla güncellendi!" });
+        // Şifre değiştiği için artık isFirstLogin false olmalı
+        res.json({ success: true, message: "Şifre güncellendi!" });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Şifre güncellenirken hata oluştu." });
+        res.status(500).json({ success: false, error: "Hata oluştu." });
     }
 });
 app.delete('/delete-child/:id', async (req, res) => {
